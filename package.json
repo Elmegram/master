@@ -1,7 +1,7 @@
 {
   "name": "elmergram",
   "version": "1.0.0",
-  "main": "bot.js",
+  "main": "server.js",
   "private": true,
   "dependencies": {
     "node-fetch": "^2.3.0"
