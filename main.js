@@ -77,14 +77,14 @@ function A9(fun, a, b, c, d, e, f, g, h, i) {
   return fun.a === 9 ? fun.f(a, b, c, d, e, f, g, h, i) : fun(a)(b)(c)(d)(e)(f)(g)(h)(i);
 }
 
-console.warn('Compiled in DEV mode. Follow the advice at https://elm-lang.org/0.19.0/optimize for better performance and smaller assets.');
 
 
-var _List_Nil_UNUSED = { $: 0 };
-var _List_Nil = { $: '[]' };
 
-function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
-function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
+var _List_Nil = { $: 0 };
+var _List_Nil_UNUSED = { $: '[]' };
+
+function _List_Cons(hd, tl) { return { $: 1, a: hd, b: tl }; }
+function _List_Cons_UNUSED(hd, tl) { return { $: '::', a: hd, b: tl }; }
 
 
 var _List_cons = F2(_List_Cons);
@@ -194,7 +194,7 @@ function _Utils_eqHelp(x, y, depth, stack)
 		return false;
 	}
 
-	/**/
+	/**_UNUSED/
 	if (x.$ === 'Set_elm_builtin')
 	{
 		x = elm$core$Set$toList(x);
@@ -207,7 +207,7 @@ function _Utils_eqHelp(x, y, depth, stack)
 	}
 	//*/
 
-	/**_UNUSED/
+	/**/
 	if (x.$ < 0)
 	{
 		x = elm$core$Dict$toList(x);
@@ -242,7 +242,7 @@ function _Utils_cmp(x, y, ord)
 		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
 	}
 
-	/**/
+	/**_UNUSED/
 	if (x instanceof String)
 	{
 		var a = x.valueOf();
@@ -251,10 +251,10 @@ function _Utils_cmp(x, y, ord)
 	}
 	//*/
 
-	/**_UNUSED/
+	/**/
 	if (typeof x.$ === 'undefined')
 	//*/
-	/**/
+	/**_UNUSED/
 	if (x.$[0] === '#')
 	//*/
 	{
@@ -284,17 +284,17 @@ var _Utils_compare = F2(function(x, y)
 
 // COMMON VALUES
 
-var _Utils_Tuple0_UNUSED = 0;
-var _Utils_Tuple0 = { $: '#0' };
+var _Utils_Tuple0 = 0;
+var _Utils_Tuple0_UNUSED = { $: '#0' };
 
-function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
-function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
+function _Utils_Tuple2(a, b) { return { a: a, b: b }; }
+function _Utils_Tuple2_UNUSED(a, b) { return { $: '#2', a: a, b: b }; }
 
-function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
-function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
+function _Utils_Tuple3(a, b, c) { return { a: a, b: b, c: c }; }
+function _Utils_Tuple3_UNUSED(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
 
-function _Utils_chr_UNUSED(c) { return c; }
-function _Utils_chr(c) { return new String(c); }
+function _Utils_chr(c) { return c; }
+function _Utils_chr_UNUSED(c) { return new String(c); }
 
 
 // RECORDS
@@ -499,12 +499,12 @@ var _JsArray_appendN = F3(function(n, dest, source)
 
 // LOG
 
-var _Debug_log_UNUSED = F2(function(tag, value)
+var _Debug_log = F2(function(tag, value)
 {
 	return value;
 });
 
-var _Debug_log = F2(function(tag, value)
+var _Debug_log_UNUSED = F2(function(tag, value)
 {
 	console.log(tag + ': ' + _Debug_toString(value));
 	return value;
@@ -530,12 +530,12 @@ function _Debug_todoCase(moduleName, region, value)
 
 // TO STRING
 
-function _Debug_toString_UNUSED(value)
+function _Debug_toString(value)
 {
 	return '<internals>';
 }
 
-function _Debug_toString(value)
+function _Debug_toString_UNUSED(value)
 {
 	return _Debug_toAnsiString(false, value);
 }
@@ -720,13 +720,13 @@ function _Debug_toHexDigit(n)
 // CRASH
 
 
-function _Debug_crash_UNUSED(identifier)
+function _Debug_crash(identifier)
 {
 	throw new Error('https://github.com/elm/core/blob/1.0.0/hints/' + identifier + '.md');
 }
 
 
-function _Debug_crash(identifier, fact1, fact2, fact3, fact4)
+function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 {
 	switch(identifier)
 	{
@@ -784,11 +784,11 @@ function _Debug_crash(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.start.line === region.end.line)
+	if (region.aa.G === region.aj.G)
 	{
-		return 'on line ' + region.start.line;
+		return 'on line ' + region.aa.G;
 	}
-	return 'on lines ' + region.start.line + ' through ' + region.end.line;
+	return 'on lines ' + region.aa.G + ' through ' + region.aj.G;
 }
 
 
@@ -1212,7 +1212,7 @@ function _String_fromList(chars)
 
 
 
-/**/
+/**_UNUSED/
 function _Json_errorToString(error)
 {
 	return elm$json$Json$Decode$errorToString(error);
@@ -1616,11 +1616,11 @@ var _Json_encode = F2(function(indentLevel, value)
 	return JSON.stringify(_Json_unwrap(value), null, indentLevel) + '';
 });
 
-function _Json_wrap(value) { return { $: 0, a: value }; }
-function _Json_unwrap(value) { return value.a; }
+function _Json_wrap_UNUSED(value) { return { $: 0, a: value }; }
+function _Json_unwrap_UNUSED(value) { return value.a; }
 
-function _Json_wrap_UNUSED(value) { return value; }
-function _Json_unwrap_UNUSED(value) { return value; }
+function _Json_wrap(value) { return value; }
+function _Json_unwrap(value) { return value; }
 
 function _Json_emptyArray() { return []; }
 function _Json_emptyObject() { return {}; }
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.init,
-		impl.update,
-		impl.subscriptions,
+		impl.a7,
+		impl.bv,
+		impl.bp,
 		function() { return function() {} }
 	);
 });
@@ -1872,7 +1872,7 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 function _Platform_initialize(flagDecoder, args, init, update, subscriptions, stepperBuilder)
 {
 	var result = A2(_Json_run, flagDecoder, _Json_wrap(args ? args['flags'] : undefined));
-	elm$core$Result$isOk(result) || _Debug_crash(2 /**/, _Json_errorToString(result.a) /**/);
+	elm$core$Result$isOk(result) || _Debug_crash(2 /**_UNUSED/, _Json_errorToString(result.a) /**/);
 	var managers = {};
 	result = init(result.a);
 	var model = result.a;
@@ -2271,7 +2271,7 @@ function _Platform_setupIncomingPort(name, sendToApp)
 //
 
 
-function _Platform_export_UNUSED(exports)
+function _Platform_export(exports)
 {
 	scope['Elm']
 		? _Platform_mergeExportsProd(scope['Elm'], exports)
@@ -2292,7 +2292,7 @@ function _Platform_mergeExportsProd(obj, exports)
 }
 
 
-function _Platform_export(exports)
+function _Platform_export_UNUSED(exports)
 {
 	scope['Elm']
 		? _Platform_mergeExportsDebug('Elm', scope['Elm'], exports)
@@ -2312,23 +2312,23 @@ function _Platform_mergeExportsDebug(moduleName, obj, exports)
 	}
 }
 var author$project$Main$initModel = {};
-var elm$core$Basics$False = {$: 'False'};
-var elm$core$Basics$True = {$: 'True'};
+var elm$core$Basics$False = 1;
+var elm$core$Basics$True = 0;
 var elm$core$Result$isOk = function (result) {
-	if (result.$ === 'Ok') {
+	if (!result.$) {
 		return true;
 	} else {
 		return false;
 	}
 };
-var elm$core$Basics$EQ = {$: 'EQ'};
-var elm$core$Basics$GT = {$: 'GT'};
-var elm$core$Basics$LT = {$: 'LT'};
+var elm$core$Basics$EQ = 1;
+var elm$core$Basics$GT = 2;
+var elm$core$Basics$LT = 0;
 var elm$core$Dict$foldr = F3(
 	function (func, acc, t) {
 		foldr:
 		while (true) {
-			if (t.$ === 'RBEmpty_elm_builtin') {
+			if (t.$ === -2) {
 				return acc;
 			} else {
 				var key = t.b;
@@ -2374,7 +2374,7 @@ var elm$core$Dict$keys = function (dict) {
 		dict);
 };
 var elm$core$Set$toList = function (_n0) {
-	var dict = _n0.a;
+	var dict = _n0;
 	return elm$core$Dict$keys(dict);
 };
 var elm$core$Elm$JsArray$foldr = _JsArray_foldr;
@@ -2384,7 +2384,7 @@ var elm$core$Array$foldr = F3(
 		var tail = _n0.d;
 		var helper = F2(
 			function (node, acc) {
-				if (node.$ === 'SubTree') {
+				if (!node.$) {
 					var subTree = node.a;
 					return A3(elm$core$Elm$JsArray$foldr, helper, acc, subTree);
 				} else {
@@ -2404,7 +2404,7 @@ var elm$core$Array$toList = function (array) {
 var elm$core$Array$branchFactor = 32;
 var elm$core$Array$Array_elm_builtin = F4(
 	function (a, b, c, d) {
-		return {$: 'Array_elm_builtin', a: a, b: b, c: c, d: d};
+		return {$: 0, a: a, b: b, c: c, d: d};
 	});
 var elm$core$Basics$ceiling = _Basics_ceiling;
 var elm$core$Basics$fdiv = _Basics_fdiv;
@@ -2418,10 +2418,10 @@ var elm$core$Array$shiftStep = elm$core$Basics$ceiling(
 var elm$core$Elm$JsArray$empty = _JsArray_empty;
 var elm$core$Array$empty = A4(elm$core$Array$Array_elm_builtin, 0, elm$core$Array$shiftStep, elm$core$Elm$JsArray$empty, elm$core$Elm$JsArray$empty);
 var elm$core$Array$Leaf = function (a) {
-	return {$: 'Leaf', a: a};
+	return {$: 1, a: a};
 };
 var elm$core$Array$SubTree = function (a) {
-	return {$: 'SubTree', a: a};
+	return {$: 0, a: a};
 };
 var elm$core$Elm$JsArray$initializeFromList = _JsArray_initializeFromList;
 var elm$core$List$foldl = F3(
@@ -2509,25 +2509,25 @@ var elm$core$Basics$sub = _Basics_sub;
 var elm$core$Elm$JsArray$length = _JsArray_length;
 var elm$core$Array$builderToArray = F2(
 	function (reverseNodeList, builder) {
-		if (!builder.nodeListSize) {
+		if (!builder.b) {
 			return A4(
 				elm$core$Array$Array_elm_builtin,
-				elm$core$Elm$JsArray$length(builder.tail),
+				elm$core$Elm$JsArray$length(builder.d),
 				elm$core$Array$shiftStep,
 				elm$core$Elm$JsArray$empty,
-				builder.tail);
+				builder.d);
 		} else {
-			var treeLen = builder.nodeListSize * elm$core$Array$branchFactor;
+			var treeLen = builder.b * elm$core$Array$branchFactor;
 			var depth = elm$core$Basics$floor(
 				A2(elm$core$Basics$logBase, elm$core$Array$branchFactor, treeLen - 1));
-			var correctNodeList = reverseNodeList ? elm$core$List$reverse(builder.nodeList) : builder.nodeList;
-			var tree = A2(elm$core$Array$treeFromBuilder, correctNodeList, builder.nodeListSize);
+			var correctNodeList = reverseNodeList ? elm$core$List$reverse(builder.e) : builder.e;
+			var tree = A2(elm$core$Array$treeFromBuilder, correctNodeList, builder.b);
 			return A4(
 				elm$core$Array$Array_elm_builtin,
-				elm$core$Elm$JsArray$length(builder.tail) + treeLen,
+				elm$core$Elm$JsArray$length(builder.d) + treeLen,
 				A2(elm$core$Basics$max, 5, depth * elm$core$Array$shiftStep),
 				tree,
-				builder.tail);
+				builder.d);
 		}
 	});
 var elm$core$Basics$idiv = _Basics_idiv;
@@ -2541,7 +2541,7 @@ var elm$core$Array$initializeHelp = F5(
 				return A2(
 					elm$core$Array$builderToArray,
 					false,
-					{nodeList: nodeList, nodeListSize: (len / elm$core$Array$branchFactor) | 0, tail: tail});
+					{e: nodeList, b: (len / elm$core$Array$branchFactor) | 0, d: tail});
 			} else {
 				var leaf = elm$core$Array$Leaf(
 					A3(elm$core$Elm$JsArray$initialize, elm$core$Array$branchFactor, fromIndex, fn));
@@ -2573,29 +2573,29 @@ var elm$core$Array$initialize = F2(
 		}
 	});
 var elm$core$Maybe$Just = function (a) {
-	return {$: 'Just', a: a};
+	return {$: 0, a: a};
 };
-var elm$core$Maybe$Nothing = {$: 'Nothing'};
+var elm$core$Maybe$Nothing = {$: 1};
 var elm$core$Result$Err = function (a) {
-	return {$: 'Err', a: a};
+	return {$: 1, a: a};
 };
 var elm$core$Result$Ok = function (a) {
-	return {$: 'Ok', a: a};
+	return {$: 0, a: a};
 };
 var elm$json$Json$Decode$Failure = F2(
 	function (a, b) {
-		return {$: 'Failure', a: a, b: b};
+		return {$: 3, a: a, b: b};
 	});
 var elm$json$Json$Decode$Field = F2(
 	function (a, b) {
-		return {$: 'Field', a: a, b: b};
+		return {$: 0, a: a, b: b};
 	});
 var elm$json$Json$Decode$Index = F2(
 	function (a, b) {
-		return {$: 'Index', a: a, b: b};
+		return {$: 1, a: a, b: b};
 	});
 var elm$json$Json$Decode$OneOf = function (a) {
-	return {$: 'OneOf', a: a};
+	return {$: 2, a: a};
 };
 var elm$core$Basics$and = _Basics_and;
 var elm$core$Basics$append = _Utils_append;
@@ -2697,12 +2697,12 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 		errorToStringHelp:
 		while (true) {
 			switch (error.$) {
-				case 'Field':
+				case 0:
 					var f = error.a;
 					var err = error.b;
 					var isSimple = function () {
 						var _n1 = elm$core$String$uncons(f);
-						if (_n1.$ === 'Nothing') {
+						if (_n1.$ === 1) {
 							return false;
 						} else {
 							var _n2 = _n1.a;
@@ -2717,7 +2717,7 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 					error = $temp$error;
 					context = $temp$context;
 					continue errorToStringHelp;
-				case 'Index':
+				case 1:
 					var i = error.a;
 					var err = error.b;
 					var indexName = '[' + (elm$core$String$fromInt(i) + ']');
@@ -2726,7 +2726,7 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 					error = $temp$error;
 					context = $temp$context;
 					continue errorToStringHelp;
-				case 'OneOf':
+				case 2:
 					var errors = error.a;
 					if (!errors.b) {
 						return 'Ran into a Json.Decode.oneOf with no possibilities' + function () {
@@ -2792,28 +2792,24 @@ var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var author$project$Main$init = function (_n0) {
 	return _Utils_Tuple2(author$project$Main$initModel, elm$core$Platform$Cmd$none);
 };
-var author$project$Telegram$Id = function (a) {
-	return {$: 'Id', a: a};
-};
-var author$project$Telegram$MessageUpdate = function (a) {
-	return {$: 'MessageUpdate', a: a};
-};
+var author$project$Telegram$Id = elm$core$Basics$identity;
+var author$project$Telegram$MessageUpdate = elm$core$Basics$identity;
 var author$project$Telegram$Update = F2(
 	function (update_id, content) {
-		return {content: content, update_id: update_id};
+		return {aW: content, bw: update_id};
 	});
 var author$project$Telegram$Message = F4(
 	function (message_id, date, chat, text) {
-		return {chat: chat, date: date, message_id: message_id, text: text};
+		return {U: chat, aX: date, a8: message_id, bs: text};
 	});
-var author$project$Telegram$Channel = {$: 'Channel'};
+var author$project$Telegram$Channel = 3;
 var author$project$Telegram$Chat = F2(
 	function (id, type_) {
-		return {id: id, type_: type_};
+		return {a5: id, bu: type_};
 	});
-var author$project$Telegram$Group = {$: 'Group'};
-var author$project$Telegram$Private = {$: 'Private'};
-var author$project$Telegram$Supergroup = {$: 'Supergroup'};
+var author$project$Telegram$Group = 1;
+var author$project$Telegram$Private = 0;
+var author$project$Telegram$Supergroup = 2;
 var elm$core$Basics$identity = function (x) {
 	return x;
 };
@@ -2830,20 +2826,20 @@ var author$project$Telegram$decodeChat = A3(
 	author$project$Telegram$Chat,
 	A2(
 		elm$json$Json$Decode$map,
-		author$project$Telegram$Id,
+		elm$core$Basics$identity,
 		A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$int)),
 	A2(
 		elm$json$Json$Decode$andThen,
 		function (typeString) {
 			switch (typeString) {
 				case 'private':
-					return elm$json$Json$Decode$succeed(author$project$Telegram$Private);
+					return elm$json$Json$Decode$succeed(0);
 				case 'group':
-					return elm$json$Json$Decode$succeed(author$project$Telegram$Group);
+					return elm$json$Json$Decode$succeed(1);
 				case 'supergroup':
-					return elm$json$Json$Decode$succeed(author$project$Telegram$Supergroup);
+					return elm$json$Json$Decode$succeed(2);
 				case 'channel':
-					return elm$json$Json$Decode$succeed(author$project$Telegram$Channel);
+					return elm$json$Json$Decode$succeed(3);
 				default:
 					return elm$json$Json$Decode$fail('Chat type ' + (typeString + ' is not known.'));
 			}
@@ -2855,7 +2851,7 @@ var author$project$Telegram$decodeMessage = A5(
 	author$project$Telegram$Message,
 	A2(
 		elm$json$Json$Decode$map,
-		author$project$Telegram$Id,
+		elm$core$Basics$identity,
 		A2(elm$json$Json$Decode$field, 'message_id', elm$json$Json$Decode$int)),
 	A2(elm$json$Json$Decode$field, 'date', elm$json$Json$Decode$int),
 	A2(elm$json$Json$Decode$field, 'chat', author$project$Telegram$decodeChat),
@@ -2865,17 +2861,15 @@ var author$project$Telegram$decodeUpdate = A3(
 	author$project$Telegram$Update,
 	A2(
 		elm$json$Json$Decode$map,
-		author$project$Telegram$Id,
+		elm$core$Basics$identity,
 		A2(elm$json$Json$Decode$field, 'update_id', elm$json$Json$Decode$int)),
 	A2(
 		elm$json$Json$Decode$map,
-		author$project$Telegram$MessageUpdate,
+		elm$core$Basics$identity,
 		A2(elm$json$Json$Decode$field, 'message', author$project$Telegram$decodeMessage)));
 var elm$json$Json$Decode$decodeValue = _Json_run;
 var author$project$Elmergram$decodeUpdate = elm$json$Json$Decode$decodeValue(author$project$Telegram$decodeUpdate);
-var author$project$Main$NewUpdate = function (a) {
-	return {$: 'NewUpdate', a: a};
-};
+var author$project$Main$NewUpdate = elm$core$Basics$identity;
 var elm$json$Json$Decode$value = _Json_decodeValue;
 var author$project$Main$incomingUpdate = _Platform_incomingPort('incomingUpdate', elm$json$Json$Decode$value);
 var elm$core$Basics$composeR = F3(
@@ -2885,17 +2879,17 @@ var elm$core$Basics$composeR = F3(
 	});
 var author$project$Main$subscriptions = function (model) {
 	return author$project$Main$incomingUpdate(
-		A2(elm$core$Basics$composeR, author$project$Elmergram$decodeUpdate, author$project$Main$NewUpdate));
+		A2(elm$core$Basics$composeR, author$project$Elmergram$decodeUpdate, elm$core$Basics$identity));
 };
 var elm$json$Json$Encode$string = _Json_wrap;
 var author$project$Main$error = _Platform_outgoingPort('error', elm$json$Json$Encode$string);
 var author$project$Elmergram$answer = F2(
 	function (text, chat) {
-		return {chat_id: chat.id, text: text};
+		return {aU: chat.a5, bs: text};
 	});
 var elm$json$Json$Encode$int = _Json_wrap;
 var author$project$Telegram$encodeId = function (_n0) {
-	var id = _n0.a;
+	var id = _n0;
 	return elm$json$Json$Encode$int(id);
 };
 var elm$json$Json$Encode$object = function (pairs) {
@@ -2908,7 +2902,7 @@ var elm$json$Json$Encode$object = function (pairs) {
 					var v = _n0.b;
 					return A3(_Json_addField, k, v, obj);
 				}),
-			_Json_emptyObject(_Utils_Tuple0),
+			_Json_emptyObject(0),
 			pairs));
 };
 var author$project$Telegram$encodeSendMessage = function (sendMessage) {
@@ -2917,20 +2911,28 @@ var author$project$Telegram$encodeSendMessage = function (sendMessage) {
 			[
 				_Utils_Tuple2(
 				'chat_id',
-				author$project$Telegram$encodeId(sendMessage.chat_id)),
+				author$project$Telegram$encodeId(sendMessage.aU)),
 				_Utils_Tuple2(
 				'text',
-				elm$json$Json$Encode$string(sendMessage.text))
+				elm$json$Json$Encode$string(sendMessage.bs))
 			]));
 };
 var author$project$Elmergram$encodeSendMessage = author$project$Telegram$encodeSendMessage;
 var author$project$Main$sendMessage = _Platform_outgoingPort('sendMessage', elm$core$Basics$identity);
+var elm$core$String$contains = _String_contains;
+var elm$core$String$toLower = _String_toLower;
 var author$project$Main$handleUpdate = F2(
 	function (model, newUpdate) {
 		var answer = function () {
-			var _n0 = newUpdate.content;
-			var message = _n0.a;
-			return A2(author$project$Elmergram$answer, 'It works!', message.chat);
+			var _n0 = newUpdate.aW;
+			var message = _n0;
+			return A2(
+				elm$core$String$contains,
+				'hi',
+				elm$core$String$toLower(message.bs)) ? A2(author$project$Elmergram$answer, 'Hi!', message.U) : (A2(
+				elm$core$String$contains,
+				'bye',
+				elm$core$String$toLower(message.bs)) ? A2(author$project$Elmergram$answer, 'Bye!', message.U) : A2(author$project$Elmergram$answer, message.bs, message.U));
 		}();
 		return _Utils_Tuple2(
 			model,
@@ -2939,8 +2941,8 @@ var author$project$Main$handleUpdate = F2(
 	});
 var author$project$Main$update = F2(
 	function (msg, model) {
-		var result = msg.a;
-		if (result.$ === 'Err') {
+		var result = msg;
+		if (result.$ === 1) {
 			var err = result.a;
 			return _Utils_Tuple2(
 				model,
@@ -2953,6 +2955,6 @@ var author$project$Main$update = F2(
 	});
 var elm$core$Platform$worker = _Platform_worker;
 var author$project$Main$main = elm$core$Platform$worker(
-	{init: author$project$Main$init, subscriptions: author$project$Main$subscriptions, update: author$project$Main$update});
+	{a7: author$project$Main$init, bp: author$project$Main$subscriptions, bv: author$project$Main$update});
 _Platform_export({'Main':{'init':author$project$Main$main(
-	elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
+	elm$json$Json$Decode$succeed(0))(0)}});}(this));

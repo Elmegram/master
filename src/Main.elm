@@ -50,7 +50,14 @@ handleUpdate model newUpdate =
         answer =
             case newUpdate.content of
                 Telegram.MessageUpdate message ->
-                    Elmergram.answer "It works!" message.chat
+                    if String.contains "hi" (String.toLower message.text) then
+                        Elmergram.answer "Hi!" message.chat
+
+                    else if String.contains "bye" (String.toLower message.text) then
+                        Elmergram.answer "Bye!" message.chat
+
+                    else
+                        Elmergram.answer message.text message.chat
     in
     ( model, Elmergram.encodeSendMessage answer |> sendMessage )
 
