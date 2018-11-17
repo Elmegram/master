@@ -1,6 +1,6 @@
 module Telegram exposing
     ( Chat
-    , ChatType
+    , ChatType(..)
     , Message
     , SendMessage
     , Update
@@ -8,6 +8,7 @@ module Telegram exposing
     , UpdateId
     , decodeUpdate
     , encodeSendMessage
+    , makeTestId
     )
 
 import Json.Decode as Decode
@@ -131,3 +132,12 @@ encodeSendMessage sendMessage =
         [ ( "chat_id", encodeId sendMessage.chat_id )
         , ( "text", Encode.string sendMessage.text )
         ]
+
+
+
+-- TEST
+
+
+makeTestId : Int -> Id a
+makeTestId id =
+    Id id
