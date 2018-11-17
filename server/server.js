@@ -1,6 +1,7 @@
 const fetch = require('node-fetch');
-const Bot = require('./bot.js');
 
+global.XMLHttpRequest = require('xhr2');
+const Bot = require('./bot.js');
 
 async function startServer() {
     // Setup Token
@@ -15,6 +16,8 @@ async function startServer() {
         console.error(errorMessage);
     });
     bot.ports.sendMessage.subscribe(function (message) {
+        console.log('\nSending message:');
+        console.log(message);
         fetch(
             baseUrl + 'sendMessage',
             {
