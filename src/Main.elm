@@ -29,23 +29,18 @@ init _ =
 
 
 type Msg
-    = NewUpdate (Result Decode.Error Telegram.Update)
+    = NewUpdate Elmergram.UpdateResult
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NewUpdate result ->
-            case result of
-                Err err ->
-                    ( model, Decode.errorToString err |> error )
-
-                Ok newUpdate ->
-                    handleUpdate model newUpdate
+            Elmergram.processUpdate error handleUpdate result model
 
 
-handleUpdate : Model -> Telegram.Update -> ( Model, Cmd Msg )
-handleUpdate model newUpdate =
+handleUpdate : Telegram.Update -> Model -> ( Model, Cmd Msg )
+handleUpdate newUpdate model =
     let
         answer =
             case newUpdate.content of

@@ -2881,6 +2881,19 @@ var author$project$Main$subscriptions = function (model) {
 	return author$project$Main$incomingUpdate(
 		A2(elm$core$Basics$composeR, author$project$Elmergram$decodeUpdate, elm$core$Basics$identity));
 };
+var author$project$Elmergram$processUpdate = F4(
+	function (error, handleUpdate, result, model) {
+		if (result.$ === 1) {
+			var err = result.a;
+			return _Utils_Tuple2(
+				model,
+				error(
+					elm$json$Json$Decode$errorToString(err)));
+		} else {
+			var newUpdate = result.a;
+			return A2(handleUpdate, newUpdate, model);
+		}
+	});
 var elm$json$Json$Encode$string = _Json_wrap;
 var author$project$Main$error = _Platform_outgoingPort('error', elm$json$Json$Encode$string);
 var author$project$Elmergram$answer = F2(
@@ -2922,7 +2935,7 @@ var author$project$Main$sendMessage = _Platform_outgoingPort('sendMessage', elm$
 var elm$core$String$contains = _String_contains;
 var elm$core$String$toLower = _String_toLower;
 var author$project$Main$handleUpdate = F2(
-	function (model, newUpdate) {
+	function (newUpdate, model) {
 		var answer = function () {
 			var _n0 = newUpdate.aW;
 			var message = _n0;
@@ -2942,16 +2955,7 @@ var author$project$Main$handleUpdate = F2(
 var author$project$Main$update = F2(
 	function (msg, model) {
 		var result = msg;
-		if (result.$ === 1) {
-			var err = result.a;
-			return _Utils_Tuple2(
-				model,
-				author$project$Main$error(
-					elm$json$Json$Decode$errorToString(err)));
-		} else {
-			var newUpdate = result.a;
-			return A2(author$project$Main$handleUpdate, model, newUpdate);
-		}
+		return A4(author$project$Elmergram$processUpdate, author$project$Main$error, author$project$Main$handleUpdate, result, model);
 	});
 var elm$core$Platform$worker = _Platform_worker;
 var author$project$Main$main = elm$core$Platform$worker(
