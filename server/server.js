@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const Bot = require('./main.js');
+const Bot = require('./bot.js');
 
 async function startServer() {
     // Setup Token
