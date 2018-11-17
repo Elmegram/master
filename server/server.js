@@ -45,7 +45,7 @@ async function startServer() {
         const json = await res.json();
         if (json.ok) {
             const updates = json.result;
-            console.log('Received updates:');
+            console.log('\nReceived updates:');
             console.log(updates);
 
             const newOffset = await handleUpdates(updates);
