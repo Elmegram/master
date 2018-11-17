@@ -42,7 +42,7 @@ handle newUpdate model =
                                             NewJoke message.chat joke
 
                                         Err reason ->
-                                            Fail message.chat (Debug.toString reason)
+                                            Fail message.chat
                                 )
                                 (Decode.field "joke" Decode.string)
                         , timeout = Nothing
@@ -54,14 +54,14 @@ handle newUpdate model =
 
 type Msg
     = NewJoke Telegram.Chat String
-    | Fail Telegram.Chat String
+    | Fail Telegram.Chat
 
 
 update : Msg -> Model -> Response
 update msg model =
     case msg of
-        Fail chat reason ->
-            simply (Elmergram.answer reason chat) model
+        Fail chat ->
+            simply (Elmergram.answer "Sorry, I had a problem finding a joke..." chat) model
 
         NewJoke chat joke ->
             simply (Elmergram.answer joke chat) model
