@@ -12,11 +12,8 @@ suite : Test
 suite =
     describe "Echo bot"
         [ fuzz nonemptyStringFuzzer "responds with the same text" <|
-            \_ ->
+            \messageText ->
                 let
-                    messageText =
-                        "echo me"
-
                     update =
                         Telegram.sendMessage messageText
                 in
