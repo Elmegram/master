@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "build": "elm make ./src/Main.elm --optimize --output ./server/bot.js"
+    "build": "elm make ./src/Main.elm --optimize --output ./server/bot.js",
+    "start": "node ./server/server.js"
   },
   "private": true,
   "dependencies": {
