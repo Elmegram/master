@@ -1,17 +1,12 @@
 const fetch = require('node-fetch');
 const Bot = require('./bot.js');
 
+
 async function startServer() {
     // Setup Token
     console.log('Checking token...')
-    const token = process.env.TELEGRAM_TOKEN;
-    const check = await isValidToken(token);
-    if (check.error) {
-        console.error(`The token '${token}' is invalid. Explanation:`)
-        console.error(check.error);
-        process.exit(1);
-    }
-    console.log(`Token valid for bot '${check.ok.first_name}'.`)
+    const { user, token } = await getValidToken();
+    console.log(`Token valid for bot '${user.first_name}'.`)
     const baseUrl = getBaseUrl(token);
 
     // Setup Elm
@@ -35,7 +30,7 @@ async function startServer() {
     let offset = 0;
 
     while (true) {
-        console.log(`Fetching updates starting with id ${offset}...`);
+        console.log(`\nFetching updates starting with id ${offset}...`);
         const res = await fetch(
             baseUrl + 'getUpdates',
             {
@@ -45,17 +40,23 @@ async function startServer() {
             }
         );
         const json = await res.json();
-        const updates = json.result;
-        console.log('Received updates:');
-        console.log(updates);
+        if (json.ok) {
+            const updates = json.result;
+            console.log('Received updates:');
+            console.log(updates);
 
-        const newOffset = await handleUpdates(updates);
-        offset = newOffset ? newOffset : offset;
+            const newOffset = await handleUpdates(updates);
+            offset = newOffset ? newOffset : offset;
 
-        await new Promise(resolve => {
-            const delay = 0;
-            setTimeout(resolve, delay);
-        });
+            await new Promise(resolve => {
+                const delay = 0;
+                setTimeout(resolve, delay);
+            });
+        } else {
+            console.error('Error fetching updates:');
+            console.error(json.description);
+            process.exit(2);
+        }
     }
 
     async function handleUpdates(updates) {
@@ -72,20 +73,27 @@ async function startServer() {
     }
 }
 
-async function isValidToken(token) {
+async function getValidToken() {
+    const tokenName = 'TELEGRAM_TOKEN';
+    const token = process.env[tokenName];
+    if (!token) {
+        cancelWithError(`No token seems to be provided in the environment variable '${tokenName}'.`);
+    }
     const res = await fetch(getBaseUrl(token) + 'getMe');
     const json = await res.json();
     if (!json.ok) {
-        return { error: json.description };
+        cancelWithError(json.description, token);
     } else {
         const user = json.result;
-        if (!user.is_bot) {
-            return { error: "Is not a bot." }
-        } else {
-            return { ok: user }
-        }
+        return { user, token }
     }
 
+    function cancelWithError(error, token) {
+        console.error(`Could not verify the token${token ? " '" + token + "'" : ''}.`);
+        console.error('Explanation:');
+        console.error(error);
+        process.exit(1);
+    }
 }
 
 function getBaseUrl(token) {
