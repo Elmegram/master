@@ -784,11 +784,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.aa.G === region.aj.G)
+	if (region.aa.G === region.ak.G)
 	{
 		return 'on line ' + region.aa.G;
 	}
-	return 'on lines ' + region.aa.G + ' through ' + region.aj.G;
+	return 'on lines ' + region.aa.G + ' through ' + region.ak.G;
 }
 
 
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.a7,
+		impl.a8,
 		impl.bv,
-		impl.bp,
+		impl.bq,
 		function() { return function() {} }
 	);
 });
@@ -2796,16 +2796,16 @@ var author$project$Telegram$Id = elm$core$Basics$identity;
 var author$project$Telegram$MessageUpdate = elm$core$Basics$identity;
 var author$project$Telegram$Update = F2(
 	function (update_id, content) {
-		return {aW: content, bw: update_id};
+		return {aX: content, bw: update_id};
 	});
 var author$project$Telegram$Message = F4(
 	function (message_id, date, chat, text) {
-		return {U: chat, aX: date, a8: message_id, bs: text};
+		return {U: chat, aY: date, a9: message_id, ad: text};
 	});
 var author$project$Telegram$Channel = 3;
 var author$project$Telegram$Chat = F2(
 	function (id, type_) {
-		return {a5: id, bu: type_};
+		return {a6: id, bu: type_};
 	});
 var author$project$Telegram$Group = 1;
 var author$project$Telegram$Private = 0;
@@ -2898,8 +2898,21 @@ var elm$json$Json$Encode$string = _Json_wrap;
 var author$project$Main$error = _Platform_outgoingPort('error', elm$json$Json$Encode$string);
 var author$project$Elmergram$answer = F2(
 	function (text, chat) {
-		return {aU: chat.a5, bs: text};
+		return {aV: chat.a6, ad: text};
 	});
+var elm$core$String$contains = _String_contains;
+var elm$core$String$toLower = _String_toLower;
+var author$project$EchoBot$handle = function (newUpdate) {
+	var _n0 = newUpdate.aX;
+	var message = _n0;
+	return A2(
+		elm$core$String$contains,
+		'hi',
+		elm$core$String$toLower(message.ad)) ? A2(author$project$Elmergram$answer, 'Hi!', message.U) : (A2(
+		elm$core$String$contains,
+		'bye',
+		elm$core$String$toLower(message.ad)) ? A2(author$project$Elmergram$answer, 'Bye!', message.U) : A2(author$project$Elmergram$answer, message.ad, message.U));
+};
 var elm$json$Json$Encode$int = _Json_wrap;
 var author$project$Telegram$encodeId = function (_n0) {
 	var id = _n0;
@@ -2924,29 +2937,17 @@ var author$project$Telegram$encodeSendMessage = function (sendMessage) {
 			[
 				_Utils_Tuple2(
 				'chat_id',
-				author$project$Telegram$encodeId(sendMessage.aU)),
+				author$project$Telegram$encodeId(sendMessage.aV)),
 				_Utils_Tuple2(
 				'text',
-				elm$json$Json$Encode$string(sendMessage.bs))
+				elm$json$Json$Encode$string(sendMessage.ad))
 			]));
 };
 var author$project$Elmergram$encodeSendMessage = author$project$Telegram$encodeSendMessage;
 var author$project$Main$sendMessage = _Platform_outgoingPort('sendMessage', elm$core$Basics$identity);
-var elm$core$String$contains = _String_contains;
-var elm$core$String$toLower = _String_toLower;
 var author$project$Main$handleUpdate = F2(
 	function (newUpdate, model) {
-		var answer = function () {
-			var _n0 = newUpdate.aW;
-			var message = _n0;
-			return A2(
-				elm$core$String$contains,
-				'hi',
-				elm$core$String$toLower(message.bs)) ? A2(author$project$Elmergram$answer, 'Hi!', message.U) : (A2(
-				elm$core$String$contains,
-				'bye',
-				elm$core$String$toLower(message.bs)) ? A2(author$project$Elmergram$answer, 'Bye!', message.U) : A2(author$project$Elmergram$answer, message.bs, message.U));
-		}();
+		var answer = author$project$EchoBot$handle(newUpdate);
 		return _Utils_Tuple2(
 			model,
 			author$project$Main$sendMessage(
@@ -2959,6 +2960,6 @@ var author$project$Main$update = F2(
 	});
 var elm$core$Platform$worker = _Platform_worker;
 var author$project$Main$main = elm$core$Platform$worker(
-	{a7: author$project$Main$init, bp: author$project$Main$subscriptions, bv: author$project$Main$update});
+	{a8: author$project$Main$init, bq: author$project$Main$subscriptions, bv: author$project$Main$update});
 _Platform_export({'Main':{'init':author$project$Main$main(
 	elm$json$Json$Decode$succeed(0))(0)}});}(this));
