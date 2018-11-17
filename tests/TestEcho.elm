@@ -17,7 +17,8 @@ suite =
                     update =
                         Telegram.sendMessage messageText
                 in
-                EchoBot.handle update
+                EchoBot.handle update EchoBot.initModel
+                    |> .message
                     |> .text
                     |> Expect.equal messageText
         ]

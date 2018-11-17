@@ -31,6 +31,7 @@ init _ =
 
 type Msg
     = NewUpdate Elmergram.UpdateResult
+    | EchoBotMsg EchoBot.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -39,14 +40,31 @@ update msg model =
         NewUpdate result ->
             Elmergram.processUpdate error handleUpdate result model
 
+        EchoBotMsg botMsg ->
+            EchoBot.update botMsg model
+                |> updateFromResponse
+
 
 handleUpdate : Telegram.Update -> Model -> ( Model, Cmd Msg )
 handleUpdate newUpdate model =
-    let
-        answer =
-            EchoBot.handle newUpdate
-    in
-    ( model, Elmergram.encodeSendMessage answer |> sendMessage )
+    EchoBot.handle newUpdate model
+        |> updateFromResponse
+
+
+updateFromResponse : EchoBot.Response -> ( Model, Cmd Msg )
+updateFromResponse response =
+    ( response.model, cmdFromResponse response )
+
+
+cmdFromResponse : EchoBot.Response -> Cmd Msg
+cmdFromResponse response =
+    Cmd.batch
+        ([ Cmd.map EchoBotMsg response.command
+         ]
+            ++ (Maybe.map (Elmergram.encodeSendMessage >> sendMessage >> List.singleton) response.message
+                    |> Maybe.withDefault []
+               )
+        )
 
 
 port error : String -> Cmd msg
