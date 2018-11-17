@@ -1,5 +1,6 @@
 port module Main exposing (main)
 
+import EchoBot
 import Elmergram
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -43,16 +44,7 @@ handleUpdate : Telegram.Update -> Model -> ( Model, Cmd Msg )
 handleUpdate newUpdate model =
     let
         answer =
-            case newUpdate.content of
-                Telegram.MessageUpdate message ->
-                    if String.contains "hi" (String.toLower message.text) then
-                        Elmergram.answer "Hi!" message.chat
-
-                    else if String.contains "bye" (String.toLower message.text) then
-                        Elmergram.answer "Bye!" message.chat
-
-                    else
-                        Elmergram.answer message.text message.chat
+            EchoBot.handle newUpdate
     in
     ( model, Elmergram.encodeSendMessage answer |> sendMessage )
 
