@@ -36,19 +36,18 @@ handle newUpdate model =
                         Http.request
                             { method = "GET"
                             , headers = [ Http.header "Accept" "application/json" ]
-                            , url = "https://icanhazdadjoke.com/"
+                            , url = "https://relevantxkcd.appspot.com/process?action=xkcd&query=" ++ message.text
                             , body = Http.emptyBody
                             , expect =
-                                Http.expectJson
+                                Http.expectString
                                     (\result ->
                                         case result of
-                                            Ok joke ->
-                                                NewJoke message.chat joke
+                                            Ok xkcd ->
+                                                NewJoke message.chat xkcd
 
                                             Err reason ->
                                                 Fail message.chat
                                     )
-                                    (Decode.field "joke" Decode.string)
                             , timeout = Nothing
                             , tracker = Nothing
                             }
