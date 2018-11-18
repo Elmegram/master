@@ -45,8 +45,8 @@ processUpdate error handleUpdate result model =
 -- UTILITIES
 
 
-answer : String -> Telegram.Chat -> Telegram.SendMessage
-answer text chat =
+answer : Telegram.Chat -> String -> Telegram.SendMessage
+answer chat text =
     { chat_id = chat.id
     , text = text
     }

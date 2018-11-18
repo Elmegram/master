@@ -49,7 +49,7 @@ handle newUpdate model =
                         , tracker = Nothing
                         }
             in
-            do (Just <| Elmergram.answer "" message.chat) model getJoke
+            do Nothing model getJoke
 
 
 type Msg
@@ -61,10 +61,13 @@ update : Msg -> Model -> Response
 update msg model =
     case msg of
         Fail chat ->
-            simply (Elmergram.answer "Sorry, I had a problem finding a joke..." chat) model
+            simply (Elmergram.answer chat "Sorry, I had a problem finding a joke...") model
 
         NewJoke chat joke ->
-            simply (Elmergram.answer joke chat) model
+            simply (Elmergram.answer chat joke) model
+
+
+-- HELPERS
 
 
 do : Maybe Telegram.SendMessage -> Model -> Cmd Msg -> Response
