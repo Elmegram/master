@@ -1,4 +1,4 @@
-module DadJokeBot exposing (Model, Msg, Response, handle, initModel, update)
+module DadJokeBot exposing (Model, Msg, Response, handle, init, update)
 
 import Elmergram
 import Http
@@ -8,12 +8,12 @@ import Url
 
 
 type alias Model =
-    {}
+    { self : Telegram.User }
 
 
-initModel : Model
-initModel =
-    {}
+init : Telegram.User -> Model
+init user =
+    { self = user }
 
 
 type alias Response =
@@ -27,29 +27,33 @@ handle : Telegram.Update -> Model -> Response
 handle newUpdate model =
     case newUpdate.content of
         Telegram.MessageUpdate message ->
-            let
-                getJoke =
-                    Http.request
-                        { method = "GET"
-                        , headers = [ Http.header "Accept" "application/json" ]
-                        , url = "https://icanhazdadjoke.com/"
-                        , body = Http.emptyBody
-                        , expect =
-                            Http.expectJson
-                                (\result ->
-                                    case result of
-                                        Ok joke ->
-                                            NewJoke message.chat joke
+            if String.contains "start" message.text || String.contains "help" message.text then
+                simply (helpMessage model.self message.chat) model
 
-                                        Err reason ->
-                                            Fail message.chat
-                                )
-                                (Decode.field "joke" Decode.string)
-                        , timeout = Nothing
-                        , tracker = Nothing
-                        }
-            in
-            do Nothing model getJoke
+            else
+                let
+                    getJoke =
+                        Http.request
+                            { method = "GET"
+                            , headers = [ Http.header "Accept" "application/json" ]
+                            , url = "https://icanhazdadjoke.com/"
+                            , body = Http.emptyBody
+                            , expect =
+                                Http.expectJson
+                                    (\result ->
+                                        case result of
+                                            Ok joke ->
+                                                NewJoke message.chat joke
+
+                                            Err reason ->
+                                                Fail message.chat
+                                    )
+                                    (Decode.field "joke" Decode.string)
+                            , timeout = Nothing
+                            , tracker = Nothing
+                            }
+                in
+                do Nothing model getJoke
 
 
 type Msg
@@ -65,6 +69,17 @@ update msg model =
 
         NewJoke chat joke ->
             simply (Elmergram.answer chat joke) model
+
+
+helpMessage : Telegram.User -> Telegram.Chat -> Telegram.SendMessage
+helpMessage self chat =
+    Elmergram.answer chat
+        ("Type \\`@"
+            ++ Elmergram.getName self
+            ++ " <query>\\` in any chat to search for [relevant xkcd](https://relevantxkcd.appspot.com/) comics.\n"
+            ++ "When the query is empty, the latest XKCD comics are sent."
+        )
+
 
 
 -- HELPERS
