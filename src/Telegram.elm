@@ -7,6 +7,7 @@ module Telegram exposing
     , UpdateContent(..)
     , UpdateId
     , decodeUpdate
+    , decodeUser
     , encodeSendMessage
     , makeTestId
     )
@@ -106,6 +107,31 @@ decodeChat =
                 )
         )
 
+
+type alias User =
+    { id : Id UserTag
+    , is_bot : Bool
+    , first_name : String
+    , last_name : Maybe String
+    , username : Maybe String
+    , language_code : Maybe String
+    }
+
+
+type UserTag
+    = UserTag
+
+
+decodeUser : Decode.Decoder User
+decodeUser =
+    Decode.map6
+        User
+        (Decode.field "id" Decode.int |> Decode.map Id)
+        (Decode.field "is_bot" Decode.bool)
+        (Decode.field "first_name" Decode.string)
+        (Decode.field "last_name" (Decode.maybe Decode.string))
+        (Decode.field "username" (Decode.maybe Decode.string))
+        (Decode.field "language_code" (Decode.maybe Decode.string))
 
 
 type Id a
