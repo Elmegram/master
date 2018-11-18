@@ -3,8 +3,10 @@ module Elmergram exposing
     , UpdateHandler
     , UpdateResult
     , answer
+    , answerFormatted
     , decodeUpdate
     , encodeSendMessage
+    , format
     , getName
     , processUpdate
     )
@@ -51,14 +53,36 @@ processUpdate error handleUpdate result model =
 
 
 
--- UTILITIES
+-- MESSAGES
 
 
 answer : Telegram.Chat -> String -> Telegram.SendMessage
 answer chat text =
     { chat_id = chat.id
     , text = text
+    , parse_mode = Nothing
     }
+
+
+answerFormatted : Telegram.Chat -> FormattedText -> Telegram.SendMessage
+answerFormatted chat (Format mode text) =
+    { chat_id = chat.id
+    , text = text
+    , parse_mode = Just mode
+    }
+
+
+type FormattedText
+    = Format Telegram.ParseMode String
+
+
+format : Telegram.ParseMode -> String -> FormattedText
+format mode text =
+    Format mode text
+
+
+
+-- USERS
 
 
 getName : Telegram.User -> String
