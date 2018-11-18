@@ -6,6 +6,7 @@ module Telegram exposing
     , Update
     , UpdateContent(..)
     , UpdateId
+    , User
     , decodeUpdate
     , decodeUser
     , encodeSendMessage
