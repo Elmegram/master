@@ -24,6 +24,8 @@ async function startServer() {
         console.error(errorMessage);
     });
     bot.ports.sendMessage.subscribe(function (message) {
+        message.parse_mode = message.parse_mode || undefined;
+
         console.log('\nSending message:');
         console.log(message);
         fetch(

@@ -2,6 +2,7 @@ module Telegram exposing
     ( Chat
     , ChatType(..)
     , Message
+    , ParseMode(..)
     , SendMessage
     , Update
     , UpdateContent(..)
@@ -151,14 +152,35 @@ encodeId (Id id) =
 type alias SendMessage =
     { chat_id : Id ChatTag
     , text : String
+    , parse_mode : Maybe ParseMode
     }
+
+
+type ParseMode
+    = Markdown
+    | Html
 
 
 encodeSendMessage : SendMessage -> Encode.Value
 encodeSendMessage sendMessage =
+    let
+        parse_mode =
+            Maybe.map
+                (\mode ->
+                    case mode of
+                        Markdown ->
+                            Encode.string "Markdown"
+
+                        Html ->
+                            Encode.string "HTML"
+                )
+                sendMessage.parse_mode
+                |> Maybe.withDefault Encode.null
+    in
     Encode.object
         [ ( "chat_id", encodeId sendMessage.chat_id )
         , ( "text", Encode.string sendMessage.text )
+        , ( "parse_mode", parse_mode )
         ]
 
 
