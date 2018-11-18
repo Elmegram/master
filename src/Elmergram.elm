@@ -1,4 +1,13 @@
-module Elmergram exposing (ErrorPort, UpdateHandler, UpdateResult, answer, decodeUpdate, encodeSendMessage, processUpdate)
+module Elmergram exposing
+    ( ErrorPort
+    , UpdateHandler
+    , UpdateResult
+    , answer
+    , decodeUpdate
+    , encodeSendMessage
+    , getName
+    , processUpdate
+    )
 
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -50,3 +59,18 @@ answer chat text =
     { chat_id = chat.id
     , text = text
     }
+
+
+getName : Telegram.User -> String
+getName user =
+    case user.username of
+        Just username ->
+            username
+
+        Nothing ->
+            case user.last_name of
+                Just lastName ->
+                    user.first_name ++ " " ++ lastName
+
+                Nothing ->
+                    user.first_name
