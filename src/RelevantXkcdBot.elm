@@ -37,16 +37,14 @@ handle newUpdate model =
                         RelevantXkcd.fetch
                             message.text
                             (\result ->
-                                let
-                                    messageText =
-                                        case result of
-                                            Ok xkcd ->
-                                                xkcd.previewUrl |> Url.toString
+                                case result of
+                                    Ok xkcd ->
+                                        xkcd.previewUrl
+                                            |> Url.toString
+                                            |> SendMessage message.chat
 
-                                            Err err ->
-                                                err
-                                in
-                                SendMessage message.chat messageText
+                                    Err _ ->
+                                        Fail message.chat
                             )
                 in
                 do Nothing model getXkcd
