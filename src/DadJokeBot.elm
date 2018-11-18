@@ -73,11 +73,15 @@ update msg model =
 
 helpMessage : Telegram.User -> Telegram.Chat -> Telegram.SendMessage
 helpMessage self chat =
-    Elmergram.answer chat
-        ("Type \\`@"
-            ++ Elmergram.getName self
-            ++ " <query>\\` in any chat to search for [relevant xkcd](https://relevantxkcd.appspot.com/) comics.\n"
-            ++ "When the query is empty, the latest XKCD comics are sent."
+    Elmergram.answerFormatted
+        chat
+        (Elmergram.format
+            Telegram.Markdown
+            ("Type `@"
+                ++ Elmergram.getName self
+                ++ " <query>` in any chat to search for [relevant xkcd](https://relevantxkcd.appspot.com/) comics."
+                ++ "When the query is empty, the latest XKCD comics are sent."
+            )
         )
 
 
