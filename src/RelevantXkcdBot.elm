@@ -1,8 +1,9 @@
-module DadJokeBot exposing (Model, Msg, Response, handle, init, update)
+module RelevantXkcdBot exposing (Model, Msg, Response, handle, init, update)
 
 import Elmergram
 import Http
 import Json.Decode as Decode
+import RelevantXkcd
 import Telegram
 import Url
 
@@ -32,31 +33,27 @@ handle newUpdate model =
 
             else
                 let
-                    getJoke =
-                        Http.request
-                            { method = "GET"
-                            , headers = [ Http.header "Accept" "application/json" ]
-                            , url = "https://relevantxkcd.appspot.com/process?action=xkcd&query=" ++ message.text
-                            , body = Http.emptyBody
-                            , expect =
-                                Http.expectString
-                                    (\result ->
+                    getXkcd =
+                        RelevantXkcd.fetch
+                            message.text
+                            (\result ->
+                                let
+                                    messageText =
                                         case result of
                                             Ok xkcd ->
-                                                NewJoke message.chat xkcd
+                                                xkcd.previewUrl |> Url.toString
 
-                                            Err reason ->
-                                                Fail message.chat
-                                    )
-                            , timeout = Nothing
-                            , tracker = Nothing
-                            }
+                                            Err err ->
+                                                err
+                                in
+                                SendMessage message.chat messageText
+                            )
                 in
-                do Nothing model getJoke
+                do Nothing model getXkcd
 
 
 type Msg
-    = NewJoke Telegram.Chat String
+    = SendMessage Telegram.Chat String
     | Fail Telegram.Chat
 
 
@@ -66,8 +63,8 @@ update msg model =
         Fail chat ->
             simply (Elmergram.answer chat "Sorry, I had a problem finding a joke...") model
 
-        NewJoke chat joke ->
-            simply (Elmergram.answer chat joke) model
+        SendMessage chat text ->
+            simply (Elmergram.answer chat text) model
 
 
 helpMessage : Telegram.User -> Telegram.Chat -> Telegram.SendMessage

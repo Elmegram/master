@@ -1,10 +1,10 @@
 port module Main exposing (main)
 
-import DadJokeBot as Bot
 import Elmergram
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Platform
+import RelevantXkcdBot as Bot
 import Telegram
 
 
