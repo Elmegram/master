@@ -33,6 +33,14 @@ type UpdateContent
     = MessageUpdate Message
 
 
+decodeUpdate : Decode.Decoder Update
+decodeUpdate =
+    Decode.map2
+        Update
+        (Decode.field "update_id" Decode.int |> Decode.map Id)
+        (Decode.field "message" decodeMessage |> Decode.map MessageUpdate)
+
+
 type alias Message =
     { message_id : Id MessageTag
     , date : Int
@@ -43,6 +51,16 @@ type alias Message =
 
 type MessageTag
     = MessageTag
+
+
+decodeMessage : Decode.Decoder Message
+decodeMessage =
+    Decode.map4
+        Message
+        (Decode.field "message_id" Decode.int |> Decode.map Id)
+        (Decode.field "date" Decode.int)
+        (Decode.field "chat" decodeChat)
+        (Decode.field "text" Decode.string)
 
 
 type alias Chat =
@@ -60,33 +78,6 @@ type ChatType
     | Group
     | Supergroup
     | Channel
-
-
-type Id a
-    = Id Int
-
-
-encodeId : Id a -> Encode.Value
-encodeId (Id id) =
-    Encode.int id
-
-
-decodeUpdate : Decode.Decoder Update
-decodeUpdate =
-    Decode.map2
-        Update
-        (Decode.field "update_id" Decode.int |> Decode.map Id)
-        (Decode.field "message" decodeMessage |> Decode.map MessageUpdate)
-
-
-decodeMessage : Decode.Decoder Message
-decodeMessage =
-    Decode.map4
-        Message
-        (Decode.field "message_id" Decode.int |> Decode.map Id)
-        (Decode.field "date" Decode.int)
-        (Decode.field "chat" decodeChat)
-        (Decode.field "text" Decode.string)
 
 
 decodeChat : Decode.Decoder Chat
@@ -114,6 +105,16 @@ decodeChat =
                             Decode.fail ("Chat type " ++ typeString ++ " is not known.")
                 )
         )
+
+
+
+type Id a
+    = Id Int
+
+
+encodeId : Id a -> Encode.Value
+encodeId (Id id) =
+    Encode.int id
 
 
 
