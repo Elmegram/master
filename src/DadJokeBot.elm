@@ -1,4 +1,4 @@
-module EchoBot exposing (Model, Msg, Response, handle, initModel, update)
+module DadJokeBot exposing (Model, Msg, Response, handle, initModel, update)
 
 import Elmergram
 import Http

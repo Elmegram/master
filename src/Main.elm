@@ -1,6 +1,6 @@
 port module Main exposing (main)
 
-import EchoBot
+import DadJokeBot as Bot
 import Elmergram
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -31,7 +31,7 @@ init _ =
 
 type Msg
     = NewUpdate Elmergram.UpdateResult
-    | EchoBotMsg EchoBot.Msg
+    | BotMsg Bot.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -40,26 +40,26 @@ update msg model =
         NewUpdate result ->
             Elmergram.processUpdate error handleUpdate result model
 
-        EchoBotMsg botMsg ->
-            EchoBot.update botMsg model
+        BotMsg botMsg ->
+            Bot.update botMsg model
                 |> updateFromResponse
 
 
 handleUpdate : Telegram.Update -> Model -> ( Model, Cmd Msg )
 handleUpdate newUpdate model =
-    EchoBot.handle newUpdate model
+    Bot.handle newUpdate model
         |> updateFromResponse
 
 
-updateFromResponse : EchoBot.Response -> ( Model, Cmd Msg )
+updateFromResponse : Bot.Response -> ( Model, Cmd Msg )
 updateFromResponse response =
     ( response.model, cmdFromResponse response )
 
 
-cmdFromResponse : EchoBot.Response -> Cmd Msg
+cmdFromResponse : Bot.Response -> Cmd Msg
 cmdFromResponse response =
     Cmd.batch
-        ([ Cmd.map EchoBotMsg response.command
+        ([ Cmd.map BotMsg response.command
          ]
             ++ (Maybe.map (Elmergram.encodeSendMessage >> sendMessage >> List.singleton) response.message
                     |> Maybe.withDefault []
