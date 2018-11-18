@@ -4,14 +4,26 @@ global.XMLHttpRequest = require('xhr2');
 const Bot = require('./bot.js');
 
 async function startServer() {
-    // Setup Token
+    // SETUP TOKEN
     console.log('Checking token...')
     const { user, token } = await getValidToken();
     console.log(`Token valid for bot '${user.first_name}'.`)
     const baseUrl = getBaseUrl(token);
 
-    // Setup Elm
-    const bot = Bot.Elm.Main.init();
+    // SETUP ELM
+    // Fill in undefined fields with null to help Elm detect them
+    // and prevent it from crashing.
+    const sanitizedUser = {
+        id: user.id,
+        is_bot: user.is_bot,
+        first_name: user.first_name,
+        last_name: user.last_name || null,
+        username: user.username || null,
+        language_code: user.language_code || null,
+    }
+    const bot = Bot.Elm.Main.init({
+        flags: sanitizedUser
+    });
     bot.ports.error.subscribe(function (errorMessage) {
         console.error(errorMessage);
     });
@@ -28,7 +40,7 @@ async function startServer() {
         );
     });
 
-    // Run
+    // RUN
     console.info('Bot started.')
     let offset = 0;
 

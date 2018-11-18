@@ -17,16 +17,38 @@ main =
 
 
 type alias Model =
-    {}
+    { bot : Bot.Model }
 
 
-initModel =
-    {}
+{-| Type that can be used by init, thus forcing errors on the JS side.
+
+The only difference to `Telegram.User` is the id field. The real user has
+a phantom type that guards against mixing incompatible ids.
+
+-}
+type alias RawUser =
+    { id : Int
+    , is_bot : Bool
+    , first_name : String
+    , last_name : Maybe String
+    , username : Maybe String
+    , language_code : Maybe String
+    }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( initModel, Cmd.none )
+init : RawUser -> ( Model, Cmd Msg )
+init rawBot =
+    let
+        bot =
+            { id = Telegram.makeTestId rawBot.id
+            , is_bot = rawBot.is_bot
+            , first_name = rawBot.first_name
+            , last_name = rawBot.last_name
+            , username = rawBot.username
+            , language_code = rawBot.language_code
+            }
+    in
+    ( { bot = Bot.init bot }, Cmd.none )
 
 
 type Msg
@@ -41,19 +63,19 @@ update msg model =
             Elmergram.processUpdate error handleUpdate result model
 
         BotMsg botMsg ->
-            Bot.update botMsg model
+            Bot.update botMsg model.bot
                 |> updateFromResponse
 
 
 handleUpdate : Telegram.Update -> Model -> ( Model, Cmd Msg )
 handleUpdate newUpdate model =
-    Bot.handle newUpdate model
+    Bot.handle newUpdate model.bot
         |> updateFromResponse
 
 
 updateFromResponse : Bot.Response -> ( Model, Cmd Msg )
 updateFromResponse response =
-    ( response.model, cmdFromResponse response )
+    ( { bot = response.model }, cmdFromResponse response )
 
 
 cmdFromResponse : Bot.Response -> Cmd Msg
