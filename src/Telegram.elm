@@ -134,8 +134,12 @@ decodeMessageEntity =
                             "pre" ->
                                 Decode.succeed (Pre bounds)
 
-                            _ ->
-                                Decode.fail "Expected a simple type."
+                            wrongType ->
+                                Decode.fail
+                                    ("Expected a simple type, but the field 'type' contained '"
+                                        ++ wrongType
+                                        ++ "'."
+                                    )
                     )
 
         textLink =
@@ -152,10 +156,18 @@ decodeMessageEntity =
                                     Decode.succeed (TextLink bounds url)
 
                                 else
-                                    Decode.fail "Expected field type to be 'text_link'."
+                                    Decode.fail
+                                        ("Expected field 'type' to be 'text_link', but it was '"
+                                            ++ type_
+                                            ++ "'."
+                                        )
 
                             Nothing ->
-                                Decode.fail "Expected valid URL in field 'url'."
+                                Decode.fail
+                                    ("Expected field 'url' to contain a valid URL, but it was '"
+                                        ++ urlString
+                                        ++ "'."
+                                    )
                     )
     in
     Decode.oneOf
