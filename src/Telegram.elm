@@ -16,6 +16,7 @@ module Telegram exposing
 
 import Json.Decode as Decode
 import Json.Encode as Encode
+import Url exposing (Url)
 
 
 
@@ -49,6 +50,7 @@ type alias Message =
     , date : Int
     , chat : Chat
     , text : String
+    , entities : List MessageEntity
     }
 
 
@@ -56,14 +58,125 @@ type MessageTag
     = MessageTag
 
 
+type MessageEntity
+    = Mention Bounds
+    | Hashtag Bounds
+    | Cashtag Bounds
+    | BotCommand Bounds
+    | Url Bounds
+    | Email Bounds
+    | PhoneNumber Bounds
+    | Bold Bounds
+    | Italic Bounds
+    | Code Bounds
+    | Pre Bounds
+    | TextLink Bounds Url
+    | TextMention Bounds User
+
+
+type alias Bounds =
+    { offset : Int
+    , length : Int
+    }
+
+
+decodeBounds : Decode.Decoder Bounds
+decodeBounds =
+    Decode.map2
+        Bounds
+        (Decode.field "offset" Decode.int)
+        (Decode.field "length" Decode.int)
+
+
+decodeMessageEntity : Decode.Decoder MessageEntity
+decodeMessageEntity =
+    let
+        simple =
+            Decode.map2
+                (\type_ bounds ->
+                    ( type_, bounds )
+                )
+                (Decode.field "type" Decode.string)
+                decodeBounds
+                |> Decode.andThen
+                    (\( type_, bounds ) ->
+                        case type_ of
+                            "mention" ->
+                                Decode.succeed (Mention bounds)
+
+                            "hashtag" ->
+                                Decode.succeed (Hashtag bounds)
+
+                            "cashtag" ->
+                                Decode.succeed (Cashtag bounds)
+
+                            "bot_command" ->
+                                Decode.succeed (BotCommand bounds)
+
+                            "url" ->
+                                Decode.succeed (Url bounds)
+
+                            "email" ->
+                                Decode.succeed (Email bounds)
+
+                            "phone_number" ->
+                                Decode.succeed (PhoneNumber bounds)
+
+                            "bold" ->
+                                Decode.succeed (Bold bounds)
+
+                            "italic" ->
+                                Decode.succeed (Italic bounds)
+
+                            "code" ->
+                                Decode.succeed (Code bounds)
+
+                            "pre" ->
+                                Decode.succeed (Pre bounds)
+
+                            _ ->
+                                Decode.fail "Expected a simple type."
+                    )
+
+        textLink =
+            Decode.map3
+                (\type_ bounds url -> ( type_, bounds, url ))
+                (Decode.field "type" Decode.string)
+                decodeBounds
+                (Decode.field "url" Decode.string)
+                |> Decode.andThen
+                    (\( type_, bounds, urlString ) ->
+                        case Url.fromString urlString of
+                            Just url ->
+                                if type_ == "text_link" then
+                                    Decode.succeed (TextLink bounds url)
+
+                                else
+                                    Decode.fail "Expected field type to be 'text_link'."
+
+                            Nothing ->
+                                Decode.fail "Expected valid URL in field 'url'."
+                    )
+    in
+    Decode.oneOf
+        [ simple
+        ]
+
+
 decodeMessage : Decode.Decoder Message
 decodeMessage =
-    Decode.map4
+    let
+        decodeEntities =
+            Decode.maybe (Decode.field "entities" (Decode.list decodeMessageEntity))
+                |> Decode.map (Maybe.withDefault [])
+    in
+    Decode.map5
         Message
         (Decode.field "message_id" Decode.int |> Decode.map Id)
         (Decode.field "date" Decode.int)
         (Decode.field "chat" decodeChat)
         (Decode.field "text" Decode.string)
+        decodeEntities
 
 
 type alias Chat =
