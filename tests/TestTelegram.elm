@@ -121,10 +121,10 @@ suite =
                         _ ->
                             Expect.fail "Expected Err, but got Ok."
             ]
-        , describe "Message"
-            [ describe "MessageEntity"
-                [ describe "Bounds"
-                    [ fuzz2 int int "valid bounds" <|
+        , describe "decode TextMessage"
+            [ describe "decode MessageEntity"
+                [ describe "decode Bounds"
+                    [ fuzz2 int int "valid" <|
                         \offset length ->
                             Decode.decodeString
                                 Telegram.decodeBounds
@@ -289,5 +289,169 @@ suite =
                                     Expect.fail "Expected Err, got Ok."
                     ]
                 ]
+            , test "valid full" <|
+                \_ ->
+                    Decode.decodeString
+                        Telegram.decodeTextMessage
+                        """
+                        {
+                            "message_id": 125907,
+                            "date": 2348945,
+                            "chat": {
+                                "id": 91583,
+                                "type": "supergroup"
+                            },
+                            "text": "send /me @peter",
+                            "entities": [
+                                {
+                                    "type": "bot_command",
+                                    "offset": 5,
+                                    "length": 3
+                                },
+                                {
+                                    "type": "mention",
+                                    "offset": 9,
+                                    "length": 6
+                                }
+                            ]
+                        }
+                        """
+                        |> Expect.equal
+                            (Ok <|
+                                Telegram.TextMessage
+                                    (Telegram.makeTestId 125907)
+                                    2348945
+                                    (Telegram.Chat (Telegram.makeTestId 91583) Telegram.Supergroup)
+                                    "send /me @peter"
+                                    [ Telegram.BotCommand (Telegram.Bounds 5 3)
+                                    , Telegram.Mention (Telegram.Bounds 9 6)
+                                    ]
+                            )
+            , test "valid minimal" <|
+                \_ ->
+                    Decode.decodeString
+                        Telegram.decodeTextMessage
+                        """
+                        {
+                            "message_id": 1,
+                            "date": 2,
+                            "chat": {
+                                "id": 3,
+                                "type": "channel"
+                            },
+                            "text": "min",
+                            "entities": []
+                        }
+                        """
+                        |> Expect.equal
+                            (Ok <|
+                                Telegram.TextMessage
+                                    (Telegram.makeTestId 1)
+                                    2
+                                    (Telegram.Chat (Telegram.makeTestId 3) Telegram.Channel)
+                                    "min"
+                                    []
+                            )
+            , test "invalid chat" <|
+                \_ ->
+                    case
+                        Decode.decodeString
+                            Telegram.decodeTextMessage
+                            """
+                        {
+                            "message_id": 1,
+                            "date": 2,
+                            "chat": "i am an invalid chat"
+                            "text": "min",
+                            "entities": []
+                        }
+                        """
+                    of
+                        Err err ->
+                            let
+                                message =
+                                    Decode.errorToString err
+                            in
+                            if String.contains "i am an invalid chat" message then
+                                Expect.pass
+
+                            else
+                                Expect.fail
+                                    ("Expected error message to contain 'i am an invalid chat', but was '"
+                                        ++ message
+                                        ++ "'."
+                                    )
+
+                        Ok _ ->
+                            Expect.fail "Expected Err, got Ok."
+            , test "invalid entity" <|
+                \_ ->
+                    case
+                        Decode.decodeString
+                            Telegram.decodeTextMessage
+                            """
+                        {
+                            "message_id": 1,
+                            "date": 2,
+                            "chat": {
+                                "id": 3,
+                                "type": "channel"
+                            },
+                            "text": "min",
+                            "entities": "i am an invalid entity"
+                        }
+                        """
+                    of
+                        Err err ->
+                            let
+                                message =
+                                    Decode.errorToString err
+                            in
+                            if String.contains "i am an invalid entity" message then
+                                Expect.pass
+
+                            else
+                                Expect.fail
+                                    ("Expected error message to contain 'i am an invalid entity', but was '"
+                                        ++ message
+                                        ++ "'."
+                                    )
+
+                        Ok _ ->
+                            Expect.fail "Expected Err, got Ok."
+            ]
+        , describe "Update"
+            [ test "valid minimal MessageUpdate" <|
+                \_ ->
+                    Decode.decodeString
+                        Telegram.decodeUpdate
+                        """
+                        {
+                            "update_id": 15780,
+                            "message": {
+                                "message_id": 5280,
+                                "date": 348739,
+                                "chat": {
+                                    "id": 570129,
+                                    "type": "private"
+                                },
+                                "text": "i am the message text"
+                            }
+                        }
+                        """
+                        |> Expect.equal
+                            (Ok <|
+                                Telegram.Update
+                                    (Telegram.makeTestId 15780)
+                                <|
+                                    Telegram.MessageUpdate <|
+                                        Telegram.TextMessage
+                                            (Telegram.makeTestId 5280)
+                                            348739
+                                            (Telegram.Chat (Telegram.makeTestId 570129) Telegram.Private)
+                                            "i am the message text"
+                                            []
+                            )
             ]
         ]
+
