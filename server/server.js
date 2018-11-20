@@ -27,7 +27,7 @@ async function startServer() {
         message.parse_mode = message.parse_mode || undefined;
 
         console.log('\nSending message:');
-        console.log(message);
+        console.log(JSON.stringify(message, undefined, 2));
         fetch(
             baseUrl + 'sendMessage',
             {
@@ -56,7 +56,7 @@ async function startServer() {
         if (json.ok) {
             const updates = json.result;
             console.log('\nReceived updates:');
-            console.log(updates);
+            console.log(JSON.stringify(updates, undefined, 2));
 
             const newOffset = await handleUpdates(updates);
             offset = newOffset ? newOffset : offset;
