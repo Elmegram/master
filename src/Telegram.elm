@@ -8,6 +8,7 @@ module Telegram exposing
     , UpdateContent(..)
     , UpdateId
     , User
+    , decodeChat
     , decodeUpdate
     , decodeUser
     , encodeSendMessage
@@ -256,9 +257,9 @@ decodeUser =
         (Decode.field "id" Decode.int |> Decode.map Id)
         (Decode.field "is_bot" Decode.bool)
         (Decode.field "first_name" Decode.string)
-        (Decode.field "last_name" (Decode.maybe Decode.string))
-        (Decode.field "username" (Decode.maybe Decode.string))
-        (Decode.field "language_code" (Decode.maybe Decode.string))
+        (Decode.maybe <| Decode.field "last_name" Decode.string)
+        (Decode.maybe <| Decode.field "username" Decode.string)
+        (Decode.maybe <| Decode.field "language_code" Decode.string)
 
 
 type Id a
