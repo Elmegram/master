@@ -217,7 +217,11 @@ suite =
                                         Expect.pass
 
                                     else
-                                        Expect.fail ("Expected error message to contain 'i am not a valid url', but was '" ++ message ++ "'.")
+                                        Expect.fail
+                                            ("Expected error message to contain 'i am not a valid url', but was '"
+                                                ++ message
+                                                ++ "'."
+                                            )
 
                                 Ok _ ->
                                     Expect.fail "Expected Err, got Ok."
@@ -275,7 +279,11 @@ suite =
                                         Expect.pass
 
                                     else
-                                        Expect.fail ("Expected error message to contain 'i am not a valid url', but was '" ++ message ++ "'.")
+                                        Expect.fail
+                                            ("Expected error message to contain 'i am not a valid url', but was '"
+                                                ++ message
+                                                ++ "'."
+                                            )
 
                                 Ok _ ->
                                     Expect.fail "Expected Err, got Ok."
