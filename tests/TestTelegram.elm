@@ -194,6 +194,91 @@ suite =
                                             (Telegram.Bounds 49 13)
                                             (Url Url.Https "elm-lang.org" Nothing "/" Nothing Nothing)
                                     )
+                    , test "invalid url" <|
+                        \_ ->
+                            case
+                                Decode.decodeString
+                                    Telegram.decodeMessageEntity
+                                    """
+                                    {
+                                        "type": "text_link",
+                                        "offset": 1,
+                                        "length": 39,
+                                        "url": "i am not a valid url"
+                                    }
+                                    """
+                            of
+                                Err err ->
+                                    let
+                                        message =
+                                            Decode.errorToString err
+                                    in
+                                    if String.contains "i am not a valid url" message then
+                                        Expect.pass
+
+                                    else
+                                        Expect.fail ("Expected error message to contain 'i am not a valid url', but was '" ++ message ++ "'.")
+
+                                Ok _ ->
+                                    Expect.fail "Expected Err, got Ok."
+                    ]
+                , describe "TextMention"
+                    [ test "valid full" <|
+                        \_ ->
+                            Decode.decodeString
+                                Telegram.decodeMessageEntity
+                                """
+                                {
+                                    "type": "text_mention",
+                                    "offset": 394,
+                                    "length": 1,
+                                    "user": {
+                                        "id": 123,
+                                        "is_bot": false,
+                                        "first_name": "Kevin"
+                                    }
+                                }
+                                """
+                                |> Expect.equal
+                                    (Ok <|
+                                        Telegram.TextMention
+                                            (Telegram.Bounds 394 1)
+                                            (Telegram.User
+                                                (Telegram.makeTestId 123)
+                                                False
+                                                "Kevin"
+                                                Nothing
+                                                Nothing
+                                                Nothing
+                                            )
+                                    )
+                    , test "invalid user" <|
+                        \_ ->
+                            case
+                                Decode.decodeString
+                                    Telegram.decodeMessageEntity
+                                    """
+                                {
+                                    "type": "text_mention",
+                                    "offset": 394,
+                                    "length": 1,
+                                    "user": "i am an invalid user"
+                                }
+                                """
+                            of
+                                Err err ->
+                                    let
+                                        message =
+                                            Decode.errorToString err
+                                    in
+                                    if String.contains "i am an invalid user" message then
+                                        Expect.pass
+
+                                    else
+                                        Expect.fail ("Expected error message to contain 'i am not a valid url', but was '" ++ message ++ "'.")
+
+                                Ok _ ->
+                                    Expect.fail "Expected Err, got Ok."
                     ]
                 ]
             ]

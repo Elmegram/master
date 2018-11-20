@@ -174,10 +174,30 @@ decodeMessageEntity =
                                         ++ "'."
                                     )
                     )
+
+        textMention =
+            Decode.map3
+                (\type_ bounds user -> ( type_, bounds, user ))
+                (Decode.field "type" Decode.string)
+                decodeBounds
+                (Decode.field "user" decodeUser)
+                |> Decode.andThen
+                    (\( type_, bounds, user ) ->
+                        if type_ == "text_mention" then
+                            Decode.succeed (TextMention bounds user)
+
+                        else
+                            Decode.fail
+                                ("Expected field 'type' to be 'text_mention', but it was '"
+                                    ++ type_
+                                    ++ "'."
+                                )
+                    )
     in
     Decode.oneOf
         [ simple
         , textLink
+        , textMention
         ]
 
 
