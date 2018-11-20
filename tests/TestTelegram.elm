@@ -1,6 +1,6 @@
 module TestTelegram exposing (suite)
 
-import Expect
+import Expect exposing (Expectation)
 import Fuzz exposing (..)
 import Json.Decode as Decode
 import Telegram
@@ -93,33 +93,17 @@ suite =
                 )
             , test "invalid chat type" <|
                 \_ ->
-                    case
-                        Decode.decodeString
+                    expectError
+                        (Decode.decodeString
                             Telegram.decodeChat
                             """
                                 {
                                     "id": 286,
-                                    "type": "i am not a valid type"
+                                    "type": "i am an invalid type"
                                 }
                             """
-                    of
-                        Err error ->
-                            let
-                                message =
-                                    Decode.errorToString error
-                            in
-                            if String.contains "i am not a valid type" message then
-                                Expect.pass
-
-                            else
-                                Expect.fail
-                                    ("Expected Err with error message mentioning actual value, but it was '"
-                                        ++ message
-                                        ++ "'."
-                                    )
-
-                        _ ->
-                            Expect.fail "Expected Err, but got Ok."
+                        )
+                        (expectErrorMessageToContain "i am an invalid type")
             ]
         , describe "decode TextMessage"
             [ describe "decode MessageEntity"
@@ -196,35 +180,19 @@ suite =
                                     )
                     , test "invalid url" <|
                         \_ ->
-                            case
-                                Decode.decodeString
+                            expectError
+                                (Decode.decodeString
                                     Telegram.decodeMessageEntity
                                     """
                                     {
                                         "type": "text_link",
                                         "offset": 1,
                                         "length": 39,
-                                        "url": "i am not a valid url"
+                                        "url": "i am an invalid url"
                                     }
                                     """
-                            of
-                                Err err ->
-                                    let
-                                        message =
-                                            Decode.errorToString err
-                                    in
-                                    if String.contains "i am not a valid url" message then
-                                        Expect.pass
-
-                                    else
-                                        Expect.fail
-                                            ("Expected error message to contain 'i am not a valid url', but was '"
-                                                ++ message
-                                                ++ "'."
-                                            )
-
-                                Ok _ ->
-                                    Expect.fail "Expected Err, got Ok."
+                                )
+                                (expectErrorMessageToContain "i am an invalid url")
                     ]
                 , describe "TextMention"
                     [ test "valid full" <|
@@ -258,8 +226,8 @@ suite =
                                     )
                     , test "invalid user" <|
                         \_ ->
-                            case
-                                Decode.decodeString
+                            expectError
+                                (Decode.decodeString
                                     Telegram.decodeMessageEntity
                                     """
                                 {
@@ -269,24 +237,8 @@ suite =
                                     "user": "i am an invalid user"
                                 }
                                 """
-                            of
-                                Err err ->
-                                    let
-                                        message =
-                                            Decode.errorToString err
-                                    in
-                                    if String.contains "i am an invalid user" message then
-                                        Expect.pass
-
-                                    else
-                                        Expect.fail
-                                            ("Expected error message to contain 'i am not a valid url', but was '"
-                                                ++ message
-                                                ++ "'."
-                                            )
-
-                                Ok _ ->
-                                    Expect.fail "Expected Err, got Ok."
+                                )
+                                (expectErrorMessageToContain "i am an invalid user")
                     ]
                 ]
             , test "valid full" <|
@@ -354,8 +306,8 @@ suite =
                             )
             , test "invalid chat" <|
                 \_ ->
-                    case
-                        Decode.decodeString
+                    expectError
+                        (Decode.decodeString
                             Telegram.decodeTextMessage
                             """
                         {
@@ -366,28 +318,12 @@ suite =
                             "entities": []
                         }
                         """
-                    of
-                        Err err ->
-                            let
-                                message =
-                                    Decode.errorToString err
-                            in
-                            if String.contains "i am an invalid chat" message then
-                                Expect.pass
-
-                            else
-                                Expect.fail
-                                    ("Expected error message to contain 'i am an invalid chat', but was '"
-                                        ++ message
-                                        ++ "'."
-                                    )
-
-                        Ok _ ->
-                            Expect.fail "Expected Err, got Ok."
+                        )
+                        (expectErrorMessageToContain "i am an invalid chat")
             , test "invalid entity" <|
                 \_ ->
-                    case
-                        Decode.decodeString
+                    expectError
+                        (Decode.decodeString
                             Telegram.decodeTextMessage
                             """
                         {
@@ -401,24 +337,8 @@ suite =
                             "entities": "i am an invalid entity"
                         }
                         """
-                    of
-                        Err err ->
-                            let
-                                message =
-                                    Decode.errorToString err
-                            in
-                            if String.contains "i am an invalid entity" message then
-                                Expect.pass
-
-                            else
-                                Expect.fail
-                                    ("Expected error message to contain 'i am an invalid entity', but was '"
-                                        ++ message
-                                        ++ "'."
-                                    )
-
-                        Ok _ ->
-                            Expect.fail "Expected Err, got Ok."
+                        )
+                        (expectErrorMessageToContain "i am an invalid entity")
             ]
         , describe "Update"
             [ test "valid minimal MessageUpdate" <|
@@ -455,3 +375,33 @@ suite =
             ]
         ]
 
+
+expectError : Result Decode.Error a -> (Decode.Error -> Expectation) -> Expectation
+expectError producer test =
+    case
+        producer
+    of
+        Err err ->
+            test err
+
+        Ok _ ->
+            Expect.fail "Expected Err, got Ok."
+
+
+expectErrorMessageToContain : String -> Decode.Error -> Expectation
+expectErrorMessageToContain contained error =
+    let
+        message =
+            Decode.errorToString error
+    in
+    if String.contains contained message then
+        Expect.pass
+
+    else
+        Expect.fail
+            ("Expected error message to contain '"
+                ++ contained
+                ++ "', but was '"
+                ++ message
+                ++ "'."
+            )
