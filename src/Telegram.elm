@@ -1,14 +1,18 @@
 module Telegram exposing
-    ( Chat
+    ( Bounds
+    , Chat
     , ChatType(..)
     , Message
+    , MessageEntity(..)
     , ParseMode(..)
     , SendMessage
     , Update
     , UpdateContent(..)
     , UpdateId
     , User
+    , decodeBounds
     , decodeChat
+    , decodeMessageEntity
     , decodeUpdate
     , decodeUser
     , encodeSendMessage
@@ -173,6 +177,7 @@ decodeMessageEntity =
     in
     Decode.oneOf
         [ simple
+        , textLink
         ]
 
 
