@@ -320,12 +320,11 @@ suite =
                         """
                         )
                         (expectErrorMessageToContain "i am an invalid chat")
-            , test "invalid entity" <|
+            , test "missing entity" <|
                 \_ ->
-                    expectError
-                        (Decode.decodeString
-                            Telegram.decodeTextMessage
-                            """
+                    Decode.decodeString
+                        Telegram.decodeTextMessage
+                        """
                         {
                             "message_id": 1,
                             "date": 2,
@@ -333,12 +332,18 @@ suite =
                                 "id": 3,
                                 "type": "channel"
                             },
-                            "text": "min",
-                            "entities": "i am an invalid entity"
+                            "text": "min"
                         }
                         """
-                        )
-                        (expectErrorMessageToContain "i am an invalid entity")
+                        |> Expect.equal
+                            (Ok <|
+                                Telegram.TextMessage
+                                    (Telegram.makeTestId 1)
+                                    2
+                                    (Telegram.Chat (Telegram.makeTestId 3) Telegram.Channel)
+                                    "min"
+                                    []
+                            )
             ]
         , describe "Update"
             [ test "valid minimal MessageUpdate" <|
