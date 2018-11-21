@@ -1,6 +1,6 @@
 port module Main exposing (main)
 
-import Elmergram
+import Elmegram
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Platform
@@ -52,7 +52,7 @@ init rawBot =
 
 
 type Msg
-    = NewUpdate Elmergram.UpdateResult
+    = NewUpdate Elmegram.UpdateResult
     | BotMsg Bot.Msg
 
 
@@ -60,7 +60,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NewUpdate result ->
-            Elmergram.processUpdate error handleUpdate result model
+            Elmegram.processUpdate error handleUpdate result model
 
         BotMsg botMsg ->
             Bot.update botMsg model.bot
@@ -83,7 +83,7 @@ cmdFromResponse response =
     Cmd.batch
         ([ Cmd.map BotMsg response.command
          ]
-            ++ (Maybe.map (Elmergram.encodeSendMessage >> sendMessage >> List.singleton) response.message
+            ++ (Maybe.map (Elmegram.encodeSendMessage >> sendMessage >> List.singleton) response.message
                     |> Maybe.withDefault []
                )
         )
@@ -97,7 +97,7 @@ port sendMessage : Encode.Value -> Cmd msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    incomingUpdate (Elmergram.decodeUpdate >> NewUpdate)
+    incomingUpdate (Elmegram.decodeUpdate >> NewUpdate)
 
 
 port incomingUpdate : (Encode.Value -> msg) -> Sub msg

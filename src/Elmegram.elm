@@ -1,4 +1,4 @@
-module Elmergram exposing
+module Elmegram exposing
     ( ErrorPort
     , UpdateHandler
     , UpdateResult
