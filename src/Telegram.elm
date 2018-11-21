@@ -1,14 +1,19 @@
 module Telegram exposing
-    ( Chat
+    ( Bounds
+    , Chat
     , ChatType(..)
-    , Message
+    , MessageEntity(..)
     , ParseMode(..)
     , SendMessage
+    , TextMessage
     , Update
     , UpdateContent(..)
     , UpdateId
     , User
+    , decodeBounds
     , decodeChat
+    , decodeMessageEntity
+    , decodeTextMessage
     , decodeUpdate
     , decodeUser
     , encodeSendMessage
@@ -35,7 +40,7 @@ type UpdateId
 
 
 type UpdateContent
-    = MessageUpdate Message
+    = MessageUpdate TextMessage
 
 
 decodeUpdate : Decode.Decoder Update
@@ -43,10 +48,10 @@ decodeUpdate =
     Decode.map2
         Update
         (Decode.field "update_id" Decode.int |> Decode.map Id)
-        (Decode.field "message" decodeMessage |> Decode.map MessageUpdate)
+        (Decode.field "message" decodeTextMessage |> Decode.map MessageUpdate)
 
 
-type alias Message =
+type alias TextMessage =
     { message_id : Id MessageTag
     , date : Int
     , chat : Chat
@@ -170,21 +175,42 @@ decodeMessageEntity =
                                         ++ "'."
                                     )
                     )
+
+        textMention =
+            Decode.map3
+                (\type_ bounds user -> ( type_, bounds, user ))
+                (Decode.field "type" Decode.string)
+                decodeBounds
+                (Decode.field "user" decodeUser)
+                |> Decode.andThen
+                    (\( type_, bounds, user ) ->
+                        if type_ == "text_mention" then
+                            Decode.succeed (TextMention bounds user)
+
+                        else
+                            Decode.fail
+                                ("Expected field 'type' to be 'text_mention', but it was '"
+                                    ++ type_
+                                    ++ "'."
+                                )
+                    )
     in
     Decode.oneOf
         [ simple
+        , textLink
+        , textMention
         ]
 
 
-decodeMessage : Decode.Decoder Message
-decodeMessage =
+decodeTextMessage : Decode.Decoder TextMessage
+decodeTextMessage =
     let
         decodeEntities =
             Decode.maybe (Decode.field "entities" (Decode.list decodeMessageEntity))
                 |> Decode.map (Maybe.withDefault [])
     in
     Decode.map5
-        Message
+        TextMessage
         (Decode.field "message_id" Decode.int |> Decode.map Id)
         (Decode.field "date" Decode.int)
         (Decode.field "chat" decodeChat)
