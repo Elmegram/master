@@ -1,6 +1,6 @@
 module RelevantXkcdBot exposing (Model, Msg, Response, handle, init, update)
 
-import Elmergram
+import Elmegram
 import Http
 import Json.Decode as Decode
 import RelevantXkcd
@@ -59,20 +59,20 @@ update : Msg -> Model -> Response
 update msg model =
     case msg of
         Fail chat ->
-            simply (Elmergram.answer chat "Sorry, I had a problem finding a joke...") model
+            simply (Elmegram.answer chat "Sorry, I had a problem finding a joke...") model
 
         SendMessage chat text ->
-            simply (Elmergram.answer chat text) model
+            simply (Elmegram.answer chat text) model
 
 
 helpMessage : Telegram.User -> Telegram.Chat -> Telegram.SendMessage
 helpMessage self chat =
-    Elmergram.answerFormatted
+    Elmegram.answerFormatted
         chat
-        (Elmergram.format
+        (Elmegram.format
             Telegram.Markdown
             ("Type `@"
-                ++ Elmergram.getName self
+                ++ Elmegram.getName self
                 ++ " <query>` in any chat to search for [relevant xkcd](https://relevantxkcd.appspot.com/) comics."
                 ++ "To get the latest comics, just enter nothing as the query.\n\n"
                 ++ "You can also just send me messages here. I will answer with the xkcd most relevant to what you sent me."
