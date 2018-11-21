@@ -23,19 +23,21 @@ async function startServer() {
     bot.ports.errorPort.subscribe(function (errorMessage) {
         console.error(errorMessage);
     });
-    bot.ports.sendMessagePort.subscribe(function (message) {
-        message.parse_mode = message.parse_mode || undefined;
+    bot.ports.sendMessagesPort.subscribe(function (messages) {
+        messages.forEach(message => {
+            message.parse_mode = message.parse_mode || undefined;
 
-        console.log('\nSending message:');
-        console.log(JSON.stringify(message, undefined, 2));
-        fetch(
-            baseUrl + 'sendMessage',
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(message),
-            }
-        );
+            console.log('\nSending message:');
+            console.log(JSON.stringify(message, undefined, 2));
+            fetch(
+                baseUrl + 'sendMessage',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(message),
+                }
+            );
+        })
     });
 
     // RUN

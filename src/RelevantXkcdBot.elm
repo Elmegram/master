@@ -26,7 +26,7 @@ handle newUpdate model =
     case newUpdate.content of
         Telegram.MessageUpdate message ->
             if String.contains "start" message.text || String.contains "help" message.text then
-                simply (helpMessage model.self message.chat) model
+                simply [ helpMessage model.self message.chat ] model
 
             else
                 let
@@ -44,7 +44,7 @@ handle newUpdate model =
                                         Fail message.chat
                             )
                 in
-                do Nothing model getXkcd
+                do [] model getXkcd
 
 
 type Msg
@@ -56,10 +56,10 @@ update : Msg -> Model -> Response
 update msg model =
     case msg of
         Fail chat ->
-            simply (Elmegram.answer chat "Sorry, I had a problem finding a joke...") model
+            simply [ Elmegram.answer chat "Sorry, I had a problem finding a joke..." ] model
 
         SendMessage chat text ->
-            simply (Elmegram.answer chat text) model
+            simply [ Elmegram.answer chat text ] model
 
 
 helpMessage : Telegram.User -> Telegram.Chat -> Telegram.SendMessage
@@ -81,17 +81,17 @@ helpMessage self chat =
 -- HELPERS
 
 
-do : Maybe Telegram.SendMessage -> Model -> Cmd Msg -> Response
-do message model cmd =
-    { message = message
+do : List Telegram.SendMessage -> Model -> Cmd Msg -> Response
+do messages model cmd =
+    { messages = messages
     , model = model
     , command = cmd
     }
 
 
-simply : Telegram.SendMessage -> Model -> Response
-simply message model =
-    { message = Just message
+simply : List Telegram.SendMessage -> Model -> Response
+simply messages model =
+    { messages = messages
     , model = model
     , command = Cmd.none
     }
@@ -99,7 +99,7 @@ simply message model =
 
 keep : Model -> Response
 keep model =
-    { message = Nothing
+    { messages = []
     , model = model
     , command = Cmd.none
     }
