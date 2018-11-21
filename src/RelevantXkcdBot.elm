@@ -1,4 +1,4 @@
-module RelevantXkcdBot exposing (Model, Msg, Response, handle, init, update)
+module RelevantXkcdBot exposing (Model, Msg, handle, init, update)
 
 import Elmegram
 import Http
@@ -8,6 +8,10 @@ import Telegram
 import Url
 
 
+type alias Response =
+    Elmegram.Response Model Msg
+
+
 type alias Model =
     { self : Telegram.User }
 
@@ -15,13 +19,6 @@ type alias Model =
 init : Telegram.User -> Model
 init user =
     { self = user }
-
-
-type alias Response =
-    { message : Maybe Telegram.SendMessage
-    , model : Model
-    , command : Cmd Msg
-    }
 
 
 handle : Telegram.Update -> Model -> Response

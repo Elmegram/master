@@ -53,7 +53,7 @@ init rawBot =
 
 
 type Msg
-    = NewUpdate Elmegram.UpdateResult
+    = NewUpdate UpdateResult
     | BotMsg Bot.Msg
 
 
@@ -61,7 +61,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NewUpdate result ->
-            Elmegram.processUpdate error handleUpdate result model
+            processUpdate errorPort handleUpdate result model
 
         BotMsg botMsg ->
             Bot.update botMsg model.bot
@@ -74,31 +74,67 @@ handleUpdate newUpdate model =
         |> updateFromResponse
 
 
-updateFromResponse : Bot.Response -> ( Model, Cmd Msg )
+updateFromResponse : Elmegram.Response Bot.Model Bot.Msg -> ( Model, Cmd Msg )
 updateFromResponse response =
     ( { bot = response.model }, cmdFromResponse response )
 
 
-cmdFromResponse : Bot.Response -> Cmd Msg
+cmdFromResponse : Elmegram.Response Bot.Model Bot.Msg -> Cmd Msg
 cmdFromResponse response =
     Cmd.batch
         ([ Cmd.map BotMsg response.command
          ]
-            ++ (Maybe.map (Elmegram.encodeSendMessage >> sendMessage >> List.singleton) response.message
+            ++ (Maybe.map (encodeSendMessage >> sendMessagePort >> List.singleton) response.message
                     |> Maybe.withDefault []
                )
         )
 
 
-port error : String -> Cmd msg
+port errorPort : String -> Cmd msg
 
 
-port sendMessage : Encode.Value -> Cmd msg
+port sendMessagePort : Encode.Value -> Cmd msg
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    incomingUpdate (Elmegram.decodeUpdate >> NewUpdate)
+    incomingUpdatePort (decodeUpdate >> NewUpdate)
 
 
-port incomingUpdate : (Encode.Value -> msg) -> Sub msg
+port incomingUpdatePort : (Encode.Value -> msg) -> Sub msg
+
+
+
+-- I/O
+
+
+decodeUpdate : Encode.Value -> Result Decode.Error Telegram.Update
+decodeUpdate =
+    Decode.decodeValue Telegram.decodeUpdate
+
+
+encodeSendMessage : Telegram.SendMessage -> Encode.Value
+encodeSendMessage =
+    Telegram.encodeSendMessage
+
+
+type alias UpdateResult =
+    Result Decode.Error Telegram.Update
+
+
+type alias ErrorPort msg =
+    String -> Cmd msg
+
+
+type alias UpdateHandler msg model =
+    Telegram.Update -> model -> ( model, Cmd msg )
+
+
+processUpdate : ErrorPort msg -> UpdateHandler msg model -> UpdateResult -> model -> ( model, Cmd msg )
+processUpdate error updateHandler result model =
+    case result of
+        Err err ->
+            ( model, Decode.errorToString err |> error )
+
+        Ok newUpdate ->
+            updateHandler newUpdate model
