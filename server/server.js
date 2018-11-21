@@ -24,12 +24,14 @@ async function startServer() {
         console.error(errorMessage);
     });
     bot.ports.sendMessagesPort.subscribe(function (messages) {
-        messages.forEach(message => {
+        messages.reduce(async (promise, message) => {
+            await promise;
+
             message.parse_mode = message.parse_mode || undefined;
 
             console.log('\nSending message:');
             console.log(JSON.stringify(message, undefined, 2));
-            fetch(
+            await fetch(
                 baseUrl + 'sendMessage',
                 {
                     method: 'POST',
@@ -37,7 +39,7 @@ async function startServer() {
                     body: JSON.stringify(message),
                 }
             );
-        })
+        }, Promise.resolve());
     });
 
     // RUN
