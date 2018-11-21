@@ -16,7 +16,7 @@ import Telegram
 
 
 type alias Response model msg =
-    { message : Maybe Telegram.SendMessage
+    { messages : List Telegram.SendMessage
     , model : model
     , command : Cmd msg
     }

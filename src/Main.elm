@@ -107,8 +107,11 @@ cmdFromResponse response =
     Cmd.batch
         ([ Cmd.map BotMsg response.command
          ]
-            ++ (Maybe.map (Telegram.encodeSendMessage >> sendMessagePort >> List.singleton) response.message
-                    |> Maybe.withDefault []
+            ++ (if List.isEmpty response.messages then
+                    []
+
+                else
+                    [ sendMessagesPort (Encode.list Telegram.encodeSendMessage response.messages) ]
                )
         )
 
@@ -120,7 +123,7 @@ cmdFromResponse response =
 port errorPort : String -> Cmd msg
 
 
-port sendMessagePort : Encode.Value -> Cmd msg
+port sendMessagesPort : Encode.Value -> Cmd msg
 
 
 subscriptions : Model -> Sub Msg
