@@ -20,10 +20,10 @@ async function startServer() {
     const bot = Bot.Elm.Main.init({
         flags: user
     });
-    bot.ports.error.subscribe(function (errorMessage) {
+    bot.ports.errorPort.subscribe(function (errorMessage) {
         console.error(errorMessage);
     });
-    bot.ports.sendMessage.subscribe(function (message) {
+    bot.ports.sendMessagePort.subscribe(function (message) {
         message.parse_mode = message.parse_mode || undefined;
 
         console.log('\nSending message:');
@@ -74,7 +74,7 @@ async function startServer() {
 
     async function handleUpdates(updates) {
         const ids = updates.map(update => {
-            bot.ports.incomingUpdate.send(update);
+            bot.ports.incomingUpdatePort.send(update);
             return update.update_id;
         })
 

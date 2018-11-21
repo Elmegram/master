@@ -17,10 +17,11 @@ main =
 
 
 type alias Model =
-    { bot : Bot.Model }
+    Bot.Model
 
 
-{-| Type that can be used by init, thus forcing errors on the JS side.
+{-| Simple type without custom types. This can be used by init, forcing errors
+on the JS side instead of in a Decoder.
 
 The only difference to `Telegram.User` is the id field. The real user has
 a phantom type that guards against mixing incompatible ids.
@@ -40,6 +41,7 @@ init : RawUser -> ( Model, Cmd Msg )
 init rawBot =
     let
         bot =
+            -- Small hack to make type safe ID.
             { id = Telegram.makeTestId rawBot.id
             , is_bot = rawBot.is_bot
             , first_name = rawBot.first_name
@@ -48,11 +50,11 @@ init rawBot =
             , language_code = rawBot.language_code
             }
     in
-    ( { bot = Bot.init bot }, Cmd.none )
+    ( Bot.init bot, Cmd.none )
 
 
 type Msg
-    = NewUpdate Elmegram.UpdateResult
+    = NewUpdate UpdateResult
     | BotMsg Bot.Msg
 
 
@@ -60,44 +62,70 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NewUpdate result ->
-            Elmegram.processUpdate error handleUpdate result model
+            processUpdate handleUpdate result model errorPort
 
         BotMsg botMsg ->
-            Bot.update botMsg model.bot
+            Bot.update botMsg model
                 |> updateFromResponse
+
+
+type alias UpdateResult =
+    Result Decode.Error Telegram.Update
+
+
+type alias ErrorPort msg =
+    String -> Cmd msg
+
+
+type alias UpdateHandler msg model =
+    Telegram.Update -> model -> ( model, Cmd msg )
+
+
+processUpdate : UpdateHandler msg model -> UpdateResult -> model -> ErrorPort msg -> ( model, Cmd msg )
+processUpdate updateHandler result model error =
+    case result of
+        Err err ->
+            ( model, Decode.errorToString err |> error )
+
+        Ok newUpdate ->
+            updateHandler newUpdate model
 
 
 handleUpdate : Telegram.Update -> Model -> ( Model, Cmd Msg )
 handleUpdate newUpdate model =
-    Bot.handle newUpdate model.bot
+    Bot.handle newUpdate model
         |> updateFromResponse
 
 
-updateFromResponse : Bot.Response -> ( Model, Cmd Msg )
+updateFromResponse : Elmegram.Response Bot.Model Bot.Msg -> ( Model, Cmd Msg )
 updateFromResponse response =
-    ( { bot = response.model }, cmdFromResponse response )
+    ( response.model, cmdFromResponse response )
 
 
-cmdFromResponse : Bot.Response -> Cmd Msg
+cmdFromResponse : Elmegram.Response Bot.Model Bot.Msg -> Cmd Msg
 cmdFromResponse response =
     Cmd.batch
         ([ Cmd.map BotMsg response.command
          ]
-            ++ (Maybe.map (Elmegram.encodeSendMessage >> sendMessage >> List.singleton) response.message
+            ++ (Maybe.map (Telegram.encodeSendMessage >> sendMessagePort >> List.singleton) response.message
                     |> Maybe.withDefault []
                )
         )
 
 
-port error : String -> Cmd msg
+
+-- PORTS
 
 
-port sendMessage : Encode.Value -> Cmd msg
+port errorPort : String -> Cmd msg
+
+
+port sendMessagePort : Encode.Value -> Cmd msg
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    incomingUpdate (Elmegram.decodeUpdate >> NewUpdate)
+    incomingUpdatePort (Decode.decodeValue Telegram.decodeUpdate >> NewUpdate)
 
 
-port incomingUpdate : (Encode.Value -> msg) -> Sub msg
+port incomingUpdatePort : (Encode.Value -> msg) -> Sub msg
