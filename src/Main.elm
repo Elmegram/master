@@ -20,7 +20,8 @@ type alias Model =
     { bot : Bot.Model }
 
 
-{-| Type that can be used by init, thus forcing errors on the JS side.
+{-| Simple type without custom types. This can be used by init, forcing errors
+on the JS side instead of in a Decoder.
 
 The only difference to `Telegram.User` is the id field. The real user has
 a phantom type that guards against mixing incompatible ids.
