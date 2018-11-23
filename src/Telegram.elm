@@ -76,8 +76,8 @@ type MessageEntity
     | Italic Bounds
     | Code Bounds
     | Pre Bounds
-    | TextLink Bounds Url
-    | TextMention Bounds User
+    | TextLink Url Bounds
+    | TextMention User Bounds
 
 
 type alias Bounds =
@@ -159,7 +159,7 @@ decodeMessageEntity =
                         case Url.fromString urlString of
                             Just url ->
                                 if type_ == "text_link" then
-                                    Decode.succeed (TextLink bounds url)
+                                    Decode.succeed (TextLink url bounds)
 
                                 else
                                     Decode.fail
@@ -185,7 +185,7 @@ decodeMessageEntity =
                 |> Decode.andThen
                     (\( type_, bounds, user ) ->
                         if type_ == "text_mention" then
-                            Decode.succeed (TextMention bounds user)
+                            Decode.succeed (TextMention user bounds)
 
                         else
                             Decode.fail

@@ -2,8 +2,10 @@ module Elmegram exposing
     ( Response
     , answer
     , answerFormatted
+    , containsCommand
     , format
-    , getName
+    , getDisplayName
+    , matchesCommand
     )
 
 import Json.Decode as Decode
@@ -24,6 +26,48 @@ type alias Response model msg =
 
 
 -- MESSAGES
+
+
+containsCommand : Telegram.TextMessage -> Bool
+containsCommand message =
+    List.any
+        (\entity ->
+            case entity of
+                Telegram.BotCommand _ ->
+                    True
+
+                _ ->
+                    False
+        )
+        message.entities
+
+
+matchesCommand : String -> Telegram.TextMessage -> Bool
+matchesCommand command message =
+    List.any
+        (\entity ->
+            case entity of
+                Telegram.BotCommand bounds ->
+                    let
+                        end =
+                            bounds.offset + bounds.length
+                    in
+                    -- Drop the '/'.
+                    String.dropLeft 1 message.text
+                        |> String.slice bounds.offset end
+                        |> String.split "@"
+                        |> List.head
+                        |> Maybe.map (\actual -> actual == command)
+                        |> Maybe.withDefault False
+
+                _ ->
+                    False
+        )
+        message.entities
+
+
+
+-- SEND MESSAGES
 
 
 answer : Telegram.Chat -> String -> Telegram.SendMessage
@@ -55,8 +99,8 @@ format mode text =
 -- USERS
 
 
-getName : Telegram.User -> String
-getName user =
+getDisplayName : Telegram.User -> String
+getDisplayName user =
     case user.username of
         Just username ->
             username
