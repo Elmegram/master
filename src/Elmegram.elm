@@ -3,7 +3,7 @@ module Elmegram exposing
     , answer
     , answerFormatted
     , format
-    , getName
+    , getDisplayName
     )
 
 import Json.Decode as Decode
@@ -55,8 +55,8 @@ format mode text =
 -- USERS
 
 
-getName : Telegram.User -> String
-getName user =
+getDisplayName : Telegram.User -> String
+getDisplayName user =
     case user.username of
         Just username ->
             username

@@ -69,7 +69,7 @@ helpMessage self chat =
         (Elmegram.format
             Telegram.Markdown
             ("Type `@"
-                ++ Elmegram.getName self
+                ++ Elmegram.getDisplayName self
                 ++ " <query>` in any chat to search for [relevant xkcd](https://relevantxkcd.appspot.com/) comics."
                 ++ "To get the latest comics, just enter nothing as the query.\n\n"
                 ++ "You can also just send me messages here. I will answer with the xkcd most relevant to what you sent me."
