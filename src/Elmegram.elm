@@ -6,6 +6,8 @@ module Elmegram exposing
     , format
     , getDisplayName
     , matchesCommand
+    , reply
+    , replyFormatted
     )
 
 import Json.Decode as Decode
@@ -71,18 +73,22 @@ matchesCommand command message =
 
 
 answer : Telegram.Chat -> String -> Telegram.SendMessage
-answer chat text =
-    { chat_id = chat.id
+answer to text =
+    { chat_id = to.id
     , text = text
     , parse_mode = Nothing
+    , reply_to_message_id = Nothing
     }
 
 
 answerFormatted : Telegram.Chat -> FormattedText -> Telegram.SendMessage
-answerFormatted chat (Format mode text) =
-    { chat_id = chat.id
-    , text = text
-    , parse_mode = Just mode
+answerFormatted to (Format mode text) =
+    let
+        sendMessage =
+            answer to text
+    in
+    { sendMessage
+        | parse_mode = Just mode
     }
 
 
@@ -93,6 +99,26 @@ type FormattedText
 format : Telegram.ParseMode -> String -> FormattedText
 format mode text =
     Format mode text
+
+
+reply : Telegram.TextMessage -> String -> Telegram.SendMessage
+reply to text =
+    { chat_id = to.chat.id
+    , text = text
+    , parse_mode = Nothing
+    , reply_to_message_id = Just to.message_id
+    }
+
+
+replyFormatted : Telegram.TextMessage -> FormattedText -> Telegram.SendMessage
+replyFormatted to (Format mode text) =
+    let
+        sendMessage =
+            reply to text
+    in
+    { sendMessage
+        | parse_mode = Just mode
+    }
 
 
 

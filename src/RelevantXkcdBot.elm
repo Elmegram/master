@@ -29,7 +29,7 @@ handle newUpdate model =
                 simply [ helpMessage model.self message.chat ] model
 
             else if Elmegram.containsCommand message then
-                simply [ commandNotFoundMessage model.self message.chat ] model
+                simply [ commandNotFoundMessage model.self message ] model
 
             else
                 let
@@ -85,10 +85,10 @@ helpText self =
         ++ "You can also just send me messages here. I will answer with the xkcd most relevant to what you sent me."
 
 
-commandNotFoundMessage : Telegram.User -> Telegram.Chat -> Telegram.SendMessage
-commandNotFoundMessage self chat =
-    Elmegram.answerFormatted
-        chat
+commandNotFoundMessage : Telegram.User -> Telegram.TextMessage -> Telegram.SendMessage
+commandNotFoundMessage self message =
+    Elmegram.replyFormatted
+        message
         (Elmegram.format
             Telegram.Markdown
             ("I did not understand that command.\n\n" ++ helpText self)
