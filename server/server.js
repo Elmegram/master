@@ -27,7 +27,14 @@ async function startServer() {
         messages.reduce(async (promise, message) => {
             await promise;
 
-            message.parse_mode = message.parse_mode || undefined;
+            function nullToUndefined(object, field) {
+                object[field] = object[field] == null ? undefined : object[field];
+                return object;
+            }
+
+            ["parse_mode", "reply_to_message_id"].forEach(field => {
+                nullToUndefined(message, field);
+            })
 
             console.log('\nSending message:');
             console.log(JSON.stringify(message, undefined, 2));

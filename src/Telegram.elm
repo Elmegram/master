@@ -305,6 +305,7 @@ type alias SendMessage =
     { chat_id : Id ChatTag
     , text : String
     , parse_mode : Maybe ParseMode
+    , reply_to_message_id : Maybe (Id MessageTag)
     }
 
 
@@ -328,11 +329,18 @@ encodeSendMessage sendMessage =
                 )
                 sendMessage.parse_mode
                 |> Maybe.withDefault Encode.null
+
+        reply_to_message_id =
+            Maybe.map
+                (\(Id id) -> Encode.int id)
+                sendMessage.reply_to_message_id
+                |> Maybe.withDefault Encode.null
     in
     Encode.object
         [ ( "chat_id", encodeId sendMessage.chat_id )
         , ( "text", Encode.string sendMessage.text )
         , ( "parse_mode", parse_mode )
+        , ( "reply_to_message_id", reply_to_message_id )
         ]
 
 
