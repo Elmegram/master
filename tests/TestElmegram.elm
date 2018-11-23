@@ -10,14 +10,14 @@ import Test exposing (..)
 suite : Test
 suite =
     describe "Elmegram"
-        [ describe "containsCommand"
+        [ describe "matchesCommand"
             [ test "detects exising command" <|
                 \_ ->
                     let
                         message =
                             TeleTest.makeMessage "detect /me"
                     in
-                    Elmegram.containsCommand "me" message
+                    Elmegram.matchesCommand "me" message
                         |> Expect.true
                             ("Expected to find command 'me' in '" ++ message.text ++ "'.")
             , test "signals no command" <|
@@ -26,7 +26,7 @@ suite =
                         message =
                             TeleTest.makeMessage "no commands"
                     in
-                    Elmegram.containsCommand "unfound" message
+                    Elmegram.matchesCommand "unfound" message
                         |> Expect.false
                             ("There was no command, but it found 'unfound' in " ++ message.text ++ "'.")
             , test "signals wrong command" <|
@@ -35,7 +35,7 @@ suite =
                         message =
                             TeleTest.makeMessage "i have a /different command"
                     in
-                    Elmegram.containsCommand "unfound" message
+                    Elmegram.matchesCommand "unfound" message
                         |> Expect.false
                             ("Expected to not confuse command 'unfound' with 'different' in '" ++ message.text ++ "'.")
             ]

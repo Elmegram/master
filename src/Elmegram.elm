@@ -2,9 +2,9 @@ module Elmegram exposing
     ( Response
     , answer
     , answerFormatted
-    , containsCommand
     , format
     , getDisplayName
+    , matchesCommand
     )
 
 import Json.Decode as Decode
@@ -27,8 +27,8 @@ type alias Response model msg =
 -- MESSAGES
 
 
-containsCommand : String -> Telegram.TextMessage -> Bool
-containsCommand command message =
+matchesCommand : String -> Telegram.TextMessage -> Bool
+matchesCommand command message =
     List.any
         (\entity ->
             case entity of

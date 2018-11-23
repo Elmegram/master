@@ -25,7 +25,7 @@ handle : Telegram.Update -> Model -> Response
 handle newUpdate model =
     case newUpdate.content of
         Telegram.MessageUpdate message ->
-            if Elmegram.containsCommand "start" message || Elmegram.containsCommand "help" message then
+            if Elmegram.matchesCommand "start" message || Elmegram.matchesCommand "help" message then
                 simply [ helpMessage model.self message.chat ] model
 
             else
