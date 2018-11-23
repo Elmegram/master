@@ -28,6 +28,9 @@ handle newUpdate model =
             if Elmegram.matchesCommand "start" message || Elmegram.matchesCommand "help" message then
                 simply [ helpMessage model.self message.chat ] model
 
+            else if Elmegram.containsCommand message then
+                simply [ commandNotFoundMessage model.self message.chat ] model
+
             else
                 let
                     getXkcd =
@@ -68,12 +71,26 @@ helpMessage self chat =
         chat
         (Elmegram.format
             Telegram.Markdown
-            ("Type `@"
-                ++ Elmegram.getDisplayName self
-                ++ " <query>` in any chat to search for [relevant xkcd](https://relevantxkcd.appspot.com/) comics."
-                ++ "To get the latest comics, just enter nothing as the query.\n\n"
-                ++ "You can also just send me messages here. I will answer with the xkcd most relevant to what you sent me."
-            )
+            (helpText self)
+        )
+
+
+helpText : Telegram.User -> String
+helpText self =
+    "Type `@"
+        ++ Elmegram.getDisplayName self
+        ++ " <query>` in any chat to search for [relevant xkcd](https://relevantxkcd.appspot.com/) comics."
+        ++ "To get the latest comics, just enter nothing as the query.\n\n"
+        ++ "You can also just send me messages here. I will answer with the xkcd most relevant to what you sent me."
+
+
+commandNotFoundMessage : Telegram.User -> Telegram.Chat -> Telegram.SendMessage
+commandNotFoundMessage self chat =
+    Elmegram.answerFormatted
+        chat
+        (Elmegram.format
+            Telegram.Markdown
+            ("I did not understand that command.\n\n" ++ helpText self)
         )
 
 
