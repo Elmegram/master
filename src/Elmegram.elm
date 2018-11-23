@@ -6,6 +6,8 @@ module Elmegram exposing
     , format
     , getDisplayName
     , matchesCommand
+    , reply
+    , replyFormatted
     )
 
 import Json.Decode as Decode
