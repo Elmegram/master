@@ -10,7 +10,36 @@ import Test exposing (..)
 suite : Test
 suite =
     describe "Elmegram"
-        [ describe "getDisplayName"
+        [ describe "containsCommand"
+            [ test "detects exising command" <|
+                \_ ->
+                    let
+                        message =
+                            TeleTest.makeMessage "detect /me"
+                    in
+                    Elmegram.containsCommand "me" message
+                        |> Expect.true
+                            ("Expected to find command 'me' in '" ++ message.text ++ "'.")
+            , test "signals no command" <|
+                \_ ->
+                    let
+                        message =
+                            TeleTest.makeMessage "no commands"
+                    in
+                    Elmegram.containsCommand "unfound" message
+                        |> Expect.false
+                            ("There was no command, but it found 'unfound' in " ++ message.text ++ "'.")
+            , test "signals wrong command" <|
+                \_ ->
+                    let
+                        message =
+                            TeleTest.makeMessage "i have a /different command"
+                    in
+                    Elmegram.containsCommand "unfound" message
+                        |> Expect.false
+                            ("Expected to not confuse command 'unfound' with 'different' in '" ++ message.text ++ "'.")
+            ]
+        , describe "getDisplayName"
             [ test "gives username, if all are specified" <|
                 \_ ->
                     let
