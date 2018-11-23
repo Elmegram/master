@@ -10,7 +10,27 @@ import Test exposing (..)
 suite : Test
 suite =
     describe "Elmegram"
-        [ describe "matchesCommand"
+        [ describe "containsCommand"
+            [ test "detects command" <|
+                \_ ->
+                    let
+                        message =
+                            TeleTest.makeMessage "detect this /command"
+                    in
+                    Elmegram.containsCommand message
+                        |> Expect.true
+                            ("Exptected to find command 'command' in '" ++ message.text ++ "'.")
+            , test "signals no command" <|
+                \_ ->
+                    let
+                        message =
+                            TeleTest.makeMessage "i contain no commands"
+                    in
+                    Elmegram.containsCommand message
+                        |> Expect.false
+                            ("Expected to not find commands in '" ++ message.text ++ "'.")
+            ]
+        , describe "matchesCommand"
             [ test "detects exising command" <|
                 \_ ->
                     let

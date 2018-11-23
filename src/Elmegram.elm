@@ -2,6 +2,7 @@ module Elmegram exposing
     ( Response
     , answer
     , answerFormatted
+    , containsCommand
     , format
     , getDisplayName
     , matchesCommand
@@ -25,6 +26,20 @@ type alias Response model msg =
 
 
 -- MESSAGES
+
+
+containsCommand : Telegram.TextMessage -> Bool
+containsCommand message =
+    List.any
+        (\entity ->
+            case entity of
+                Telegram.BotCommand _ ->
+                    True
+
+                _ ->
+                    False
+        )
+        message.entities
 
 
 matchesCommand : String -> Telegram.TextMessage -> Bool
