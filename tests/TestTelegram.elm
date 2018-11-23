@@ -175,8 +175,8 @@ suite =
                                 |> Expect.equal
                                     (Ok <|
                                         Telegram.TextLink
-                                            (Telegram.Bounds 49 13)
                                             (Url Url.Https "elm-lang.org" Nothing "/" Nothing Nothing)
+                                            (Telegram.Bounds 49 13)
                                     )
                     , test "invalid url" <|
                         \_ ->
@@ -214,7 +214,6 @@ suite =
                                 |> Expect.equal
                                     (Ok <|
                                         Telegram.TextMention
-                                            (Telegram.Bounds 394 1)
                                             (Telegram.User
                                                 (Telegram.makeTestId 123)
                                                 False
@@ -223,6 +222,7 @@ suite =
                                                 Nothing
                                                 Nothing
                                             )
+                                            (Telegram.Bounds 394 1)
                                     )
                     , test "invalid user" <|
                         \_ ->
