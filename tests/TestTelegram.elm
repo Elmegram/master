@@ -454,6 +454,43 @@ suite =
                                             "i am the message text"
                                             []
                             )
+            , test "valid minimal InlineQuery" <|
+                \_ ->
+                    Decode.decodeString
+                        Telegram.decodeUpdate
+                        """
+                        {
+                            "update_id": 15780,
+                            "inline_query": {
+                                "id": "43",
+                                "from": {
+                                    "id": 59234,
+                                    "is_bot": false,
+                                    "first_name": "Minimalist"
+                                },
+                                "query": "stuff",
+                                "offset": "88"
+                            }
+                        }
+                        """
+                        |> Expect.equal
+                            (Ok <|
+                                Telegram.Update
+                                    (Telegram.makeTestId 15780)
+                                <|
+                                    Telegram.InlineQueryUpdate <|
+                                        Telegram.InlineQuery
+                                            "43"
+                                            (Telegram.User (Telegram.makeTestId 59234)
+                                                False
+                                                "Minimalist"
+                                                Nothing
+                                                Nothing
+                                                Nothing
+                                            )
+                                            "stuff"
+                                            "88"
+                            )
             ]
         ]
 

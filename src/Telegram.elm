@@ -43,6 +43,7 @@ type UpdateId
 
 type UpdateContent
     = MessageUpdate TextMessage
+    | InlineQueryUpdate InlineQuery
 
 
 decodeUpdate : Decode.Decoder Update
@@ -50,7 +51,11 @@ decodeUpdate =
     Decode.map2
         Update
         (Decode.field "update_id" Decode.int |> Decode.map Id)
-        (Decode.field "message" decodeTextMessage |> Decode.map MessageUpdate)
+        (Decode.oneOf
+            [ Decode.field "message" decodeTextMessage |> Decode.map MessageUpdate
+            , Decode.field "inline_query" decodeInlineQuery |> Decode.map InlineQueryUpdate
+            ]
+        )
 
 
 type alias TextMessage =
