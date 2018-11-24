@@ -38,10 +38,15 @@ handle newUpdate model =
                             message.text
                             (\result ->
                                 case result of
-                                    Ok xkcd ->
-                                        xkcd.previewUrl
-                                            |> Url.toString
-                                            |> SendMessage message.chat
+                                    Ok xkcds ->
+                                        case xkcds of
+                                            bestMatch :: _ ->
+                                                bestMatch.previewUrl
+                                                    |> Url.toString
+                                                    |> SendMessage message.chat
+
+                                            _ ->
+                                                SendMessage message.chat "No relevant xkcd found."
 
                                     Err _ ->
                                         Fail message.chat
@@ -49,23 +54,58 @@ handle newUpdate model =
                 in
                 do [] model getXkcd
 
+        Telegram.InlineQueryUpdate inlineQuery ->
+            let
+                getXkcd =
+                    RelevantXkcd.fetch
+                        inlineQuery.query
+                        (\result ->
+                            case result of
+                                Ok xkcds ->
+                                    AnswerQuery inlineQuery xkcds
+
+                                Err _ ->
+                                    NoOp
+                        )
+            in
+            do [] model getXkcd
+
 
 type Msg
-    = SendMessage Telegram.Chat String
+    = NoOp
+    | SendMessage Telegram.Chat String
+    | AnswerQuery Telegram.InlineQuery (List RelevantXkcd.Xkcd)
     | Fail Telegram.Chat
 
 
 update : Msg -> Model -> Response
 update msg model =
     case msg of
-        Fail chat ->
-            simply [ Elmegram.answer chat "Sorry, I had a problem finding a joke..." ] model
+        NoOp ->
+            keep model
 
         SendMessage chat text ->
             simply [ Elmegram.answer chat text ] model
 
+        AnswerQuery id xkcds ->
+            let
+                results =
+                    List.indexedMap
+                        (\index xkcd ->
+                            Elmegram.makeInlineQueryResultArticleText
+                                (String.fromInt xkcd.id)
+                                ("xckd #" ++ String.fromInt index)
+                                (Url.toString xkcd.previewUrl)
+                        )
+                        xkcds
+            in
+            simply [ Elmegram.answerInlineQuery id results ] model
 
-helpMessage : Telegram.User -> Telegram.Chat -> Telegram.SendMessage
+        Fail chat ->
+            simply [ Elmegram.answer chat "Sorry, I had a problem finding a joke..." ] model
+
+
+helpMessage : Telegram.User -> Telegram.Chat -> Elmegram.Method
 helpMessage self chat =
     Elmegram.answerFormatted
         chat
@@ -85,7 +125,7 @@ helpText self =
         ++ "You can also just send me messages here. I will answer with the xkcd most relevant to what you sent me."
 
 
-commandNotFoundMessage : Telegram.User -> Telegram.TextMessage -> Telegram.SendMessage
+commandNotFoundMessage : Telegram.User -> Telegram.TextMessage -> Elmegram.Method
 commandNotFoundMessage self message =
     Elmegram.replyFormatted
         message
@@ -99,17 +139,17 @@ commandNotFoundMessage self message =
 -- HELPERS
 
 
-do : List Telegram.SendMessage -> Model -> Cmd Msg -> Response
-do messages model cmd =
-    { messages = messages
+do : List Elmegram.Method -> Model -> Cmd Msg -> Response
+do methods model cmd =
+    { methods = methods
     , model = model
     , command = cmd
     }
 
 
-simply : List Telegram.SendMessage -> Model -> Response
-simply messages model =
-    { messages = messages
+simply : List Elmegram.Method -> Model -> Response
+simply methods model =
+    { methods = methods
     , model = model
     , command = Cmd.none
     }
@@ -117,7 +157,7 @@ simply messages model =
 
 keep : Model -> Response
 keep model =
-    { messages = []
+    { methods = []
     , model = model
     , command = Cmd.none
     }

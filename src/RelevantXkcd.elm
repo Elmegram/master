@@ -1,4 +1,4 @@
-module RelevantXkcd exposing (fetch)
+module RelevantXkcd exposing (Xkcd, fetch)
 
 import Http
 import Url exposing (Url)
@@ -11,7 +11,7 @@ type alias Xkcd =
     }
 
 
-fetch : String -> (Result String Xkcd -> msg) -> Cmd msg
+fetch : String -> (Result String (List Xkcd) -> msg) -> Cmd msg
 fetch query tag =
     Http.request
         { method = "GET"
@@ -27,15 +27,6 @@ fetch query tag =
                     >> Result.andThen
                         (\body ->
                             parseResponse body
-                                |> Result.andThen
-                                    (\list ->
-                                        case list of
-                                            bestMatch :: _ ->
-                                                Ok bestMatch
-
-                                            _ ->
-                                                Err "No relevant xkcd found."
-                                    )
                         )
                     >> tag
                 )
