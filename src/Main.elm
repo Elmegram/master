@@ -107,11 +107,11 @@ cmdFromResponse response =
     Cmd.batch
         ([ Cmd.map BotMsg response.command
          ]
-            ++ (if List.isEmpty response.messages then
+            ++ (if List.isEmpty response.methods then
                     []
 
                 else
-                    [ sendMessagesPort (Encode.list Telegram.encodeSendMessage response.messages) ]
+                    [ methodPort (Encode.list Elmegram.encodeMethod response.methods) ]
                )
         )
 
@@ -123,7 +123,7 @@ cmdFromResponse response =
 port errorPort : String -> Cmd msg
 
 
-port sendMessagesPort : Encode.Value -> Cmd msg
+port methodPort : Encode.Value -> Cmd msg
 
 
 subscriptions : Model -> Sub Msg
