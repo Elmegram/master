@@ -1,5 +1,6 @@
 module Elmegram exposing
-    ( Method(..)
+    ( FormattedText
+    , Method(..)
     , Response
     , answer
     , answerFormatted

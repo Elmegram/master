@@ -34,16 +34,23 @@ handle newUpdate model =
             else
                 let
                     getXkcd =
-                        RelevantXkcd.fetch
+                        RelevantXkcd.fetchIds
                             message.text
                             (\result ->
                                 case result of
-                                    Ok xkcds ->
-                                        case xkcds of
+                                    Ok ids ->
+                                        case ids of
                                             bestMatch :: _ ->
-                                                bestMatch.previewUrl
-                                                    |> Url.toString
-                                                    |> SendMessage message.chat
+                                                FetchXkcd
+                                                    (\res ->
+                                                        case res of
+                                                            Ok xkcd ->
+                                                                SendXkcdMessage message.chat xkcd
+
+                                                            Err err ->
+                                                                SendMessage message.chat "Error getting xkcds."
+                                                    )
+                                                    bestMatch
 
                                             _ ->
                                                 SendMessage message.chat "No relevant xkcd found."
@@ -57,12 +64,21 @@ handle newUpdate model =
         Telegram.InlineQueryUpdate inlineQuery ->
             let
                 getXkcd =
-                    RelevantXkcd.fetch
+                    RelevantXkcd.fetchIds
                         inlineQuery.query
                         (\result ->
                             case result of
-                                Ok xkcds ->
-                                    AnswerQuery inlineQuery xkcds
+                                Ok ids ->
+                                    FetchXkcds
+                                        (\res ->
+                                            case res of
+                                                Ok xkcds ->
+                                                    AnswerQuery inlineQuery xkcds
+
+                                                Err err ->
+                                                    AnswerQuery inlineQuery []
+                                        )
+                                        ids
 
                                 Err _ ->
                                     NoOp
@@ -75,6 +91,9 @@ type Msg
     = NoOp
     | SendMessage Telegram.Chat String
     | AnswerQuery Telegram.InlineQuery (List RelevantXkcd.Xkcd)
+    | FetchXkcd (Result String RelevantXkcd.Xkcd -> Msg) RelevantXkcd.XkcdId
+    | FetchXkcds (Result String (List RelevantXkcd.Xkcd) -> Msg) (List RelevantXkcd.XkcdId)
+    | SendXkcdMessage Telegram.Chat RelevantXkcd.Xkcd
     | Fail Telegram.Chat
 
 
@@ -84,25 +103,42 @@ update msg model =
         NoOp ->
             keep model
 
-        SendMessage chat text ->
-            simply [ Elmegram.answer chat text ] model
+        SendMessage to text ->
+            simply [ Elmegram.answer to text ] model
 
-        AnswerQuery id xkcds ->
+        AnswerQuery to xkcds ->
             let
                 results =
-                    List.indexedMap
-                        (\index xkcd ->
+                    List.map
+                        (\xkcd ->
                             Elmegram.makeInlineQueryResultArticleText
-                                (String.fromInt xkcd.id)
-                                ("xckd #" ++ String.fromInt index)
-                                (Url.toString xkcd.previewUrl)
+                                (String.fromInt <| RelevantXkcd.getId xkcd)
+                                (RelevantXkcd.getTitle xkcd)
+                                (Url.toString <| RelevantXkcd.getPreviewUrl xkcd)
                         )
                         xkcds
             in
-            simply [ Elmegram.answerInlineQuery id results ] model
+            simply [ Elmegram.answerInlineQuery to results ] model
+
+        FetchXkcd tag id ->
+            do [] model (RelevantXkcd.fetchXkcd tag id)
+
+        FetchXkcds tag ids ->
+            do [] model (RelevantXkcd.fetchXkcds tag ids)
+
+        SendXkcdMessage to xkcd ->
+            simply [ Elmegram.answerFormatted to (xkcdText xkcd) ] model
 
         Fail chat ->
             simply [ Elmegram.answer chat "Sorry, I had a problem finding a joke..." ] model
+
+
+xkcdText : RelevantXkcd.Xkcd -> Elmegram.FormattedText
+xkcdText xkcd =
+    Elmegram.format Telegram.Html
+        (("<b>" ++ RelevantXkcd.getTitle xkcd ++ "</b>\n")
+            ++ (Url.toString <| RelevantXkcd.getPreviewUrl xkcd)
+        )
 
 
 helpMessage : Telegram.User -> Telegram.Chat -> Elmegram.Method
