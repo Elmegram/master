@@ -56,7 +56,7 @@ handle newUpdate model =
                                                 SendMessage message.chat "No relevant xkcd found."
 
                                     Err _ ->
-                                        Fail message.chat
+                                        SendMessage message.chat "Error getting xkcds."
                             )
                 in
                 do [] model getXkcd
@@ -94,7 +94,6 @@ type Msg
     | FetchXkcd (Result String RelevantXkcd.Xkcd -> Msg) RelevantXkcd.XkcdId
     | FetchXkcds (Result String (List RelevantXkcd.Xkcd) -> Msg) (List RelevantXkcd.XkcdId)
     | SendXkcdMessage Telegram.Chat RelevantXkcd.Xkcd
-    | Fail Telegram.Chat
 
 
 update : Msg -> Model -> Response
@@ -111,10 +110,12 @@ update msg model =
                 results =
                     List.map
                         (\xkcd ->
-                            Elmegram.makeInlineQueryResultArticleText
-                                (String.fromInt <| RelevantXkcd.getId xkcd)
-                                (RelevantXkcd.getTitle xkcd)
-                                (Url.toString <| RelevantXkcd.getPreviewUrl xkcd)
+                            Elmegram.inlineQueryResultArticle
+                                { id = String.fromInt <| RelevantXkcd.getId xkcd
+                                , title = RelevantXkcd.getTitle xkcd
+                                , description = RelevantXkcd.getTranscript xkcd |> Maybe.withDefault "No description available."
+                                , message = Elmegram.makeInputMessageFormatted <| xkcdText xkcd
+                                }
                         )
                         xkcds
             in
@@ -128,9 +129,6 @@ update msg model =
 
         SendXkcdMessage to xkcd ->
             simply [ Elmegram.answerFormatted to (xkcdText xkcd) ] model
-
-        Fail chat ->
-            simply [ Elmegram.answer chat "Sorry, I had a problem finding a joke..." ] model
 
 
 xkcdText : RelevantXkcd.Xkcd -> Elmegram.FormattedText

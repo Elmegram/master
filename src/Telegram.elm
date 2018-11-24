@@ -423,7 +423,21 @@ encodeInlineQueryResult inlineQueryResult =
 type alias InlineQueryResultArticle =
     { id : String
     , title : String
+    , description : Maybe String
     , input_message_content : InputMessageContent
+    }
+
+
+type alias ArticleUrl =
+    { url : Url
+    , hide_url : Maybe Bool
+    }
+
+
+type alias Thumbnail =
+    { thumb_url : Url
+    , thumb_width : Maybe Int
+    , thumb_height : Maybe Int
     }
 
 
@@ -432,6 +446,7 @@ objectFromInlineQueryResultArticle article =
     [ ( "id", Encode.string article.id )
     , ( "title", Encode.string article.title )
     , ( "input_message_content", encodeInputMessageContent article.input_message_content )
+    , ( "description", encodeMaybe Encode.string article.description )
     ]
 
 

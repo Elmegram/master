@@ -9,7 +9,9 @@ module Elmegram exposing
     , encodeMethod
     , format
     , getDisplayName
-    , makeInlineQueryResultArticleText
+    , inlineQueryResultArticle
+    , makeInputMessage
+    , makeInputMessageFormatted
     , matchesCommand
     , reply
     , replyFormatted
@@ -167,7 +169,6 @@ replyFormatted to text =
         |> methodFromMessage
 
 
-methodFromMessage : Telegram.SendMessage -> Method
 methodFromMessage =
     SendMessageMethod
 
@@ -192,20 +193,47 @@ answerInlineQuery to results =
         |> methodFromInlineQuery
 
 
-makeInlineQueryResultArticleText : String -> String -> String -> Telegram.InlineQueryResult
-makeInlineQueryResultArticleText id title text =
+makeMinimalInlineQueryResultArticle : { a | id : String, title : String, message : Telegram.InputMessageContent } -> Telegram.InlineQueryResultArticle
+makeMinimalInlineQueryResultArticle { id, title, message } =
+    { id = id
+    , title = title
+    , input_message_content = message
+    , description = Nothing
+    }
+
+
+inlineQueryResultArticle : { id : String, title : String, description : String, message : Telegram.InputMessageContent } -> Telegram.InlineQueryResult
+inlineQueryResultArticle config =
+    let
+        article =
+            makeMinimalInlineQueryResultArticle config
+    in
+    { article
+        | description = Just config.description
+    }
+        |> inlineQueryResultFromArticle
+
+
+inlineQueryResultFromArticle =
     Telegram.Article
-        { id = id
-        , title = title
-        , input_message_content =
-            Telegram.Text
-                { message_text = text
-                , parse_mode = Nothing
-                }
+
+
+makeInputMessage : String -> Telegram.InputMessageContent
+makeInputMessage text =
+    Telegram.Text
+        { message_text = text
+        , parse_mode = Nothing
         }
 
 
-methodFromInlineQuery : Telegram.AnswerInlineQuery -> Method
+makeInputMessageFormatted : FormattedText -> Telegram.InputMessageContent
+makeInputMessageFormatted (Format mode text) =
+    Telegram.Text
+        { message_text = text
+        , parse_mode = Just mode
+        }
+
+
 methodFromInlineQuery =
     AnswerInlineQueryMethod
 
