@@ -345,6 +345,53 @@ suite =
                                     []
                             )
             ]
+        , describe "InlineQuery"
+            [ test "valid full" <|
+                \_ ->
+                    Decode.decodeString
+                        Telegram.decodeInlineQuery
+                        """
+                        {
+                            "id": "2348",
+                            "from": {
+                                "id": 59234,
+                                "is_bot": false,
+                                "first_name": "Minimalist"
+                            },
+                            "query": "search for me",
+                            "offset": "23"
+                        }
+                        """
+                        |> Expect.equal
+                            (Ok <|
+                                Telegram.InlineQuery
+                                    "2348"
+                                    (Telegram.User (Telegram.makeTestId 59234)
+                                        False
+                                        "Minimalist"
+                                        Nothing
+                                        Nothing
+                                        Nothing
+                                    )
+                                    "search for me"
+                                    "23"
+                            )
+            , test "invalid user" <|
+                \_ ->
+                    expectError
+                        (Decode.decodeString
+                            Telegram.decodeInlineQuery
+                            """
+                                {
+                                    "id": "2348",
+                                    "from": "invalid user",
+                                    "query": "search for me",
+                                    "offset": "23"
+                                }
+                                """
+                        )
+                        (expectErrorMessageToContain "invalid user")
+            ]
         , describe "Update"
             [ test "valid minimal MessageUpdate" <|
                 \_ ->

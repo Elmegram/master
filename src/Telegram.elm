@@ -2,6 +2,7 @@ module Telegram exposing
     ( Bounds
     , Chat
     , ChatType(..)
+    , InlineQuery
     , MessageEntity(..)
     , ParseMode(..)
     , SendMessage
@@ -12,6 +13,7 @@ module Telegram exposing
     , User
     , decodeBounds
     , decodeChat
+    , decodeInlineQuery
     , decodeMessageEntity
     , decodeTextMessage
     , decodeUpdate
@@ -216,6 +218,24 @@ decodeTextMessage =
         (Decode.field "chat" decodeChat)
         (Decode.field "text" Decode.string)
         decodeEntities
+
+
+type alias InlineQuery =
+    { id : String
+    , from : User
+    , query : String
+    , offset : String
+    }
+
+
+decodeInlineQuery : Decode.Decoder InlineQuery
+decodeInlineQuery =
+    Decode.map4
+        InlineQuery
+        (Decode.field "id" Decode.string)
+        (Decode.field "from" decodeUser)
+        (Decode.field "query" Decode.string)
+        (Decode.field "offset" Decode.string)
 
 
 type alias Chat =
