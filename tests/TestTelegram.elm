@@ -376,6 +376,36 @@ suite =
                                     "search for me"
                                     "23"
                             )
+            , test "non-numerical id and offset" <|
+                \_ ->
+                    Decode.decodeString
+                        Telegram.decodeInlineQuery
+                        """
+                        {
+                            "id": "i am the id",
+                            "from": {
+                                "id": 59234,
+                                "is_bot": false,
+                                "first_name": "Minimalist"
+                            },
+                            "query": "stuff",
+                            "offset": "i am the offset"
+                        }
+                        """
+                        |> Expect.equal
+                            (Ok <|
+                                Telegram.InlineQuery
+                                    "i am the id"
+                                    (Telegram.User (Telegram.makeTestId 59234)
+                                        False
+                                        "Minimalist"
+                                        Nothing
+                                        Nothing
+                                        Nothing
+                                    )
+                                    "stuff"
+                                    "i am the offset"
+                            )
             , test "invalid user" <|
                 \_ ->
                     expectError
