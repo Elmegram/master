@@ -1,7 +1,9 @@
 module Telegram exposing
-    ( AnswerInlineQuery
+    ( AnswerCallbackQuery
+    , AnswerInlineQuery
     , ArticleUrl(..)
     , Bounds
+    , CallbackQuery
     , Chat
     , ChatType(..)
     , InlineKeyboard
@@ -28,6 +30,7 @@ module Telegram exposing
     , decodeTextMessage
     , decodeUpdate
     , decodeUser
+    , encodeAnswerCallbackQuery
     , encodeAnswerInlineQuery
     , encodeSendMessage
     , makeTestId
@@ -56,6 +59,7 @@ type UpdateId
 type UpdateContent
     = MessageUpdate TextMessage
     | InlineQueryUpdate InlineQuery
+    | CallbackQueryUpdate CallbackQuery
 
 
 decodeUpdate : Decode.Decoder Update
@@ -66,6 +70,7 @@ decodeUpdate =
         (Decode.oneOf
             [ Decode.field "message" decodeTextMessage |> Decode.map MessageUpdate
             , Decode.field "inline_query" decodeInlineQuery |> Decode.map InlineQueryUpdate
+            , Decode.field "callback_query" decodeCallbackQuery |> Decode.map CallbackQueryUpdate
             ]
         )
 
@@ -257,6 +262,26 @@ decodeInlineQuery =
         (Decode.field "from" decodeUser)
         (Decode.field "query" Decode.string)
         (Decode.field "offset" Decode.string)
+
+
+type alias CallbackQuery =
+    { id : Id CallbackQueryTag
+    , from : User
+    , data : String
+    }
+
+
+decodeCallbackQuery : Decode.Decoder CallbackQuery
+decodeCallbackQuery =
+    Decode.map3
+        CallbackQuery
+        (Decode.field "id" Decode.string |> Decode.map IdString)
+        (Decode.field "from" decodeUser)
+        (Decode.field "data" Decode.string)
+
+
+type CallbackQueryTag
+    = CallbackQueryTag
 
 
 type alias Chat =
@@ -524,6 +549,26 @@ encodeInputTextMessageContent content =
     Encode.object
         [ ( "message_text", Encode.string content.message_text )
         , ( "parse_mode", encodeMaybe encodeParseMode content.parse_mode )
+        ]
+
+
+type alias AnswerCallbackQuery =
+    { callback_query_id : Id CallbackQueryTag
+    , text : Maybe String
+    , show_alert : Bool
+    , url : Maybe Url
+    , cache_time : Int
+    }
+
+
+encodeAnswerCallbackQuery : AnswerCallbackQuery -> Encode.Value
+encodeAnswerCallbackQuery query =
+    Encode.object
+        [ ( "callback_query_id", encodeId query.callback_query_id )
+        , ( "text", encodeMaybe Encode.string query.text )
+        , ( "show_alert", Encode.bool query.show_alert )
+        , ( "url", encodeMaybe (Url.toString >> Encode.string) query.url )
+        , ( "cache_time", Encode.int query.cache_time )
         ]
 
 

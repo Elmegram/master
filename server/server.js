@@ -32,6 +32,8 @@ async function startServer() {
                     return sendMessage(method.content);
                 case "answerInlineQuery":
                     return answerInlineQuery(method.content);
+                case "answerCallbackQuery":
+                    return answerCallbackQuery(method.content);
             }
 
         }, Promise.resolve());
@@ -111,6 +113,34 @@ async function startServer() {
             console.error(JSON.stringify(json, undefined, 2));
         } else {
             console.log('\nSuccessfully answered inline query:');
+            console.log(JSON.stringify(inlineQuery, undefined, 2));
+        }
+    }
+
+    async function answerCallbackQuery(callbackQuery) {
+        [
+            "text",
+            "url"
+        ].forEach(field => {
+            nullToUndefined(callbackQuery, field);
+        })
+
+        const res = await fetch(
+            baseUrl + 'answerCallbackQuery',
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(callbackQuery),
+            }
+        );
+        const json = await res.json();
+        if (!json.ok) {
+            console.error('\nAnswering callback query failed. Wanted to send:');
+            console.error(JSON.stringify(inlineQuery, undefined, 2));
+            console.error('Received error:');
+            console.error(JSON.stringify(json, undefined, 2));
+        } else {
+            console.log('\nSuccessfully answered callback query:');
             console.log(JSON.stringify(inlineQuery, undefined, 2));
         }
     }

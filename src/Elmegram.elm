@@ -12,12 +12,14 @@ module Elmegram exposing
     , inlineQueryResultArticle
     , inlineQueryResultFromArticle
     , makeAnswer
+    , makeAnswerCallbackQuery
     , makeAnswerFormatted
     , makeAnswerInlineQuery
     , makeInputMessage
     , makeInputMessageFormatted
     , makeMinimalInlineQueryResultArticle
     , matchesCommand
+    , methodFromAnswerCallbackQuery
     , methodFromInlineQuery
     , methodFromMessage
     , reply
@@ -43,6 +45,7 @@ type alias Response model msg =
 type Method
     = SendMessageMethod Telegram.SendMessage
     | AnswerInlineQueryMethod Telegram.AnswerInlineQuery
+    | AnswerCallbackQueryMethod Telegram.AnswerCallbackQuery
 
 
 encodeMethod : Method -> Encode.Value
@@ -58,6 +61,12 @@ encodeMethod method =
             Encode.object
                 [ ( "method", Encode.string "answerInlineQuery" )
                 , ( "content", Telegram.encodeAnswerInlineQuery inlineQuery )
+                ]
+
+        AnswerCallbackQueryMethod callbackQuery ->
+            Encode.object
+                [ ( "method", Encode.string "answerCallbackQuery" )
+                , ( "content", Telegram.encodeAnswerCallbackQuery callbackQuery )
                 ]
 
 
@@ -248,6 +257,24 @@ makeInputMessageFormatted (Format mode text) =
 
 methodFromInlineQuery =
     AnswerInlineQueryMethod
+
+
+
+-- ANSWER CALLBACK QUERIES
+
+
+makeAnswerCallbackQuery: Telegram.CallbackQuery -> Telegram.AnswerCallbackQuery
+makeAnswerCallbackQuery to =
+    { callback_query_id = to.id
+    , text = Nothing
+    , show_alert = False
+    , url = Nothing
+    , cache_time = 0
+    }
+
+
+methodFromAnswerCallbackQuery =
+    AnswerCallbackQueryMethod
 
 
 

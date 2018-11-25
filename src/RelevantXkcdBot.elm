@@ -86,11 +86,33 @@ handle newUpdate model =
             in
             do [] model getXkcd
 
+        Telegram.CallbackQueryUpdate callbackQuery ->
+            case String.toInt callbackQuery.data of
+                Just id ->
+                    do []
+                        model
+                        (RelevantXkcd.fetchXkcd
+                            (\result ->
+                                case result of
+                                    Ok xkcd ->
+                                        AnswerCallback callbackQuery xkcd
+
+                                    Err _ ->
+                                        AnswerCallbackFail callbackQuery
+                            )
+                            id
+                        )
+
+                Nothing ->
+                    simply [ answerCallbackFail callbackQuery ] model
+
 
 type Msg
     = NoOp
     | SendMessage Telegram.Chat String
     | AnswerQuery Telegram.InlineQuery (List RelevantXkcd.Xkcd)
+    | AnswerCallback Telegram.CallbackQuery RelevantXkcd.Xkcd
+    | AnswerCallbackFail Telegram.CallbackQuery
     | FetchXkcd (Result String RelevantXkcd.Xkcd -> Msg) RelevantXkcd.XkcdId
     | FetchXkcds (Result String (List RelevantXkcd.Xkcd) -> Msg) (List RelevantXkcd.XkcdId)
     | SendXkcdMessage Telegram.Chat RelevantXkcd.Xkcd
@@ -143,6 +165,22 @@ update msg model =
             in
             simply [ debugInlineQuery |> Elmegram.methodFromInlineQuery ] model
 
+        AnswerCallback to xkcd ->
+            let
+                incompleteAnswer =
+                    Elmegram.makeAnswerCallbackQuery to
+
+                answer =
+                    { incompleteAnswer
+                        | text = Just <| RelevantXkcd.getMouseOver xkcd
+                        , show_alert = True
+                    }
+            in
+            simply [ answer |> Elmegram.methodFromAnswerCallbackQuery ] model
+
+        AnswerCallbackFail to ->
+            simply [ answerCallbackFail to ] model
+
         FetchXkcd tag id ->
             do [] model (RelevantXkcd.fetchXkcd tag id)
 
@@ -178,7 +216,15 @@ xkcdText xkcd =
 
 xkcdKeyboard : RelevantXkcd.Xkcd -> Telegram.InlineKeyboard
 xkcdKeyboard xkcd =
-    [ [ Telegram.UrlButton (RelevantXkcd.getExplainUrl xkcd) "Explain XKCD" ] ]
+    [ [ Telegram.CallbackButton (RelevantXkcd.getId xkcd |> String.fromInt) "Show mouse-over" ]
+    , [ Telegram.UrlButton (RelevantXkcd.getExplainUrl xkcd) "Explain XKCD" ]
+    ]
+
+
+answerCallbackFail : Telegram.CallbackQuery -> Elmegram.Method
+answerCallbackFail to =
+    Elmegram.makeAnswerCallbackQuery to
+        |> Elmegram.methodFromAnswerCallbackQuery
 
 
 helpMessage : Telegram.User -> Telegram.Chat -> Elmegram.Method
