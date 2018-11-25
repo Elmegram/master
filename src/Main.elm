@@ -63,7 +63,7 @@ update : BotHandle Bot.Model Bot.Msg -> BotUpdate Bot.Model Bot.Msg -> ErrorPort
 update botHandle botUpdate error msg model =
     case msg of
         NewUpdate result ->
-            processUpdate (handleUpdate botHandle) result model error
+            processUpdate botHandle result model error
 
         BotMsg botMsg ->
             botUpdate botMsg model
@@ -74,15 +74,7 @@ type alias UpdateResult =
     Result Decode.Error Telegram.Update
 
 
-type alias ErrorPort msg =
-    String -> Cmd msg
-
-
-type alias UpdateHandler msg model =
-    Telegram.Update -> model -> ( model, Cmd msg )
-
-
-processUpdate : UpdateHandler msg model -> UpdateResult -> model -> ErrorPort msg -> ( model, Cmd msg )
+processUpdate : BotHandle Bot.Model Bot.Msg -> UpdateResult -> Bot.Model -> ErrorPort Msg -> ( Bot.Model, Cmd Msg )
 processUpdate updateHandler result model error =
     case result of
         Err err ->
@@ -90,12 +82,7 @@ processUpdate updateHandler result model error =
 
         Ok newUpdate ->
             updateHandler newUpdate model
-
-
-handleUpdate : BotHandle Bot.Model Bot.Msg -> Telegram.Update -> Model -> ( Model, Cmd Msg )
-handleUpdate botHandle newUpdate model =
-    botHandle newUpdate model
-        |> updateFromResponse
+                |> updateFromResponse
 
 
 updateFromResponse : Elmegram.Response Bot.Model Bot.Msg -> ( Model, Cmd Msg )
