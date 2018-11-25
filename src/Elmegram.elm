@@ -205,7 +205,7 @@ makeMinimalInlineQueryResultArticle { id, title, message } =
     , input_message_content = message
     , description = Nothing
     , url = Nothing
-    , thumbnail = Nothing
+    , thumb_url = Nothing
     }
 
 

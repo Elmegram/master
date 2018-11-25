@@ -438,7 +438,7 @@ type alias InlineQueryResultArticle =
     , description : Maybe String
     , input_message_content : InputMessageContent
     , url : Maybe ArticleUrl
-    , thumbnail : Maybe Thumbnail
+    , thumb_url : Maybe Url
     }
 
 
@@ -463,21 +463,6 @@ objectFromArticleUrl articleUrl =
     ]
 
 
-type alias Thumbnail =
-    { url : Url
-    , width : Maybe Int
-    , height : Maybe Int
-    }
-
-
-objectFromThumbnail : Thumbnail -> List ( String, Encode.Value )
-objectFromThumbnail thumbnail =
-    [ ( "thumb_url", Url.toString thumbnail.url |> Encode.string )
-    , ( "thumb_width", encodeMaybe Encode.int thumbnail.width )
-    , ( "thumb_height", encodeMaybe Encode.int thumbnail.height )
-    ]
-
-
 objectFromInlineQueryResultArticle : InlineQueryResultArticle -> List ( String, Encode.Value )
 objectFromInlineQueryResultArticle article =
     let
@@ -488,22 +473,14 @@ objectFromInlineQueryResultArticle article =
 
                 Nothing ->
                     []
-
-        thumbnail =
-            case article.thumbnail of
-                Just thumb ->
-                    objectFromThumbnail thumb
-
-                Nothing ->
-                    []
     in
     [ ( "id", Encode.string article.id )
     , ( "title", Encode.string article.title )
     , ( "input_message_content", encodeInputMessageContent article.input_message_content )
     , ( "description", encodeMaybe Encode.string article.description )
+    , ( "thumb_url", encodeMaybe (Url.toString >> Encode.string) article.thumb_url )
     ]
         ++ articleUrl
-        ++ thumbnail
 
 
 type InputMessageContent
