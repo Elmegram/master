@@ -1,18 +1,95 @@
-module RelevantXkcd exposing (fetch)
+module RelevantXkcd exposing
+    ( Xkcd
+    , XkcdId
+    , fetchIds
+    , fetchXkcd
+    , fetchXkcds
+    , getComicUrl
+    , getExplainUrl
+    , getId
+    , getMouseOver
+    , getPreviewUrl
+    , getTitle
+    , getTranscript
+    )
 
 import Http
+import Json.Decode as Decode
+import Task exposing (Task)
 import Url exposing (Url)
 import Url.Builder
 
 
-type alias Xkcd =
+
+-- XKCD
+
+
+type Xkcd
+    = Xkcd XkcdContent
+
+
+type alias XkcdContent =
     { id : Int
     , previewUrl : Url
+    , title : String
+    , mouseOver : String
+    , transcript : Maybe String
     }
 
 
-fetch : String -> (Result String Xkcd -> msg) -> Cmd msg
-fetch query tag =
+getId : Xkcd -> Int
+getId (Xkcd xkcd) =
+    xkcd.id
+
+
+getPreviewUrl : Xkcd -> Url
+getPreviewUrl (Xkcd xkcd) =
+    xkcd.previewUrl
+
+
+getTitle : Xkcd -> String
+getTitle (Xkcd xkcd) =
+    xkcd.title
+
+
+getMouseOver : Xkcd -> String
+getMouseOver (Xkcd xkcd) =
+    xkcd.mouseOver
+
+
+getTranscript : Xkcd -> Maybe String
+getTranscript (Xkcd xkcd) =
+    xkcd.transcript
+
+
+getComicUrl : Xkcd -> Url
+getComicUrl (Xkcd xkcd) =
+    { protocol = Url.Https
+    , host = "xkcd.com"
+    , port_ = Nothing
+    , path = "/" ++ String.fromInt xkcd.id
+    , query = Nothing
+    , fragment = Nothing
+    }
+
+
+getExplainUrl : Xkcd -> Url
+getExplainUrl (Xkcd xkcd) =
+    { protocol = Url.Https
+    , host = "www.explainxkcd.com"
+    , port_ = Nothing
+    , path = "/wiki/index.php/" ++ String.fromInt xkcd.id
+    , query = Nothing
+    , fragment = Nothing
+    }
+
+
+
+-- METHODS
+
+
+fetchIds : String -> (Result String (List XkcdId) -> msg) -> Cmd msg
+fetchIds query tag =
     Http.request
         { method = "GET"
         , headers = []
@@ -27,15 +104,6 @@ fetch query tag =
                     >> Result.andThen
                         (\body ->
                             parseResponse body
-                                |> Result.andThen
-                                    (\list ->
-                                        case list of
-                                            bestMatch :: _ ->
-                                                Ok bestMatch
-
-                                            _ ->
-                                                Err "No relevant xkcd found."
-                                    )
                         )
                     >> tag
                 )
@@ -44,7 +112,7 @@ fetch query tag =
         }
 
 
-parseResponse : String -> Result String (List Xkcd)
+parseResponse : String -> Result String (List XkcdId)
 parseResponse body =
     let
         dropFromEnd amount list =
@@ -62,30 +130,23 @@ parseResponse body =
             (Ok [])
 
 
-parseXkcd : String -> Result String Xkcd
+type alias XkcdId =
+    Int
+
+
+parseXkcd : String -> Result String XkcdId
 parseXkcd line =
     case String.words line of
         idString :: urlString :: [] ->
-            let
-                parseId =
-                    String.toInt
-
-                parseUrl =
-                    (++) "https://www.explainxkcd.com"
-                        >> Url.fromString
-            in
-            case
-                ( idString, urlString )
-                    |> Tuple.mapBoth parseId parseUrl
-            of
-                ( Just id, Just url ) ->
-                    Ok (Xkcd id url)
+            case String.toInt idString of
+                Just id ->
+                    Ok id
 
                 _ ->
-                    Err "Malformed line. Could not convert id or url."
+                    Err "Malformed line. Could not convert id."
 
         malformed ->
-            Err <| "Malformed line. Expected 2, got " ++ (List.length malformed |> String.fromInt) ++ "."
+            Err <| "Malformed line. Expected 2 fields, got " ++ (List.length malformed |> String.fromInt) ++ "."
 
 
 queryUrl : String -> Url
@@ -95,5 +156,83 @@ queryUrl query =
     , port_ = Nothing
     , path = "/process"
     , query = Just ("action=xkcd&query=" ++ query)
+    , fragment = Nothing
+    }
+
+
+fetchXkcd : (Result String Xkcd -> msg) -> XkcdId -> Cmd msg
+fetchXkcd tag id =
+    fetchXkcdTask id
+        |> Task.attempt tag
+
+
+fetchXkcds : (Result String (List Xkcd) -> msg) -> List XkcdId -> Cmd msg
+fetchXkcds tag ids =
+    Task.sequence (List.map fetchXkcdTask ids)
+        |> Task.attempt tag
+
+
+fetchXkcdTask : XkcdId -> Task String Xkcd
+fetchXkcdTask id =
+    Http.task
+        { method = "GET"
+        , headers = []
+        , url = Url.toString (xkcdInfoUrl id)
+        , body = Http.emptyBody
+        , resolver =
+            Http.stringResolver
+                (\response ->
+                    case response of
+                        Http.GoodStatus_ _ res ->
+                            let
+                                decodeUrl =
+                                    Decode.string
+                                        |> Decode.andThen
+                                            (\urlString ->
+                                                case Url.fromString urlString of
+                                                    Just url ->
+                                                        Decode.succeed url
+
+                                                    Nothing ->
+                                                        Decode.fail ("Invalid url '" ++ urlString ++ "'.")
+                                            )
+
+                                decodeTranscript =
+                                    Decode.string
+                                        |> Decode.map
+                                            (\transcript ->
+                                                if String.isEmpty transcript then
+                                                    Nothing
+
+                                                else
+                                                    Just transcript
+                                            )
+                            in
+                            Decode.decodeString
+                                (Decode.map4
+                                    (XkcdContent id)
+                                    (Decode.field "img" decodeUrl)
+                                    (Decode.field "title" Decode.string)
+                                    (Decode.field "alt" Decode.string)
+                                    (Decode.field "transcript" decodeTranscript)
+                                )
+                                res
+                                |> Result.map Xkcd
+                                |> Result.mapError Decode.errorToString
+
+                        _ ->
+                            Err "Error fetching xkcd."
+                )
+        , timeout = Nothing
+        }
+
+
+xkcdInfoUrl : XkcdId -> Url
+xkcdInfoUrl id =
+    { protocol = Url.Https
+    , host = "xkcd.com"
+    , port_ = Nothing
+    , path = "/" ++ String.fromInt id ++ "/info.0.json"
+    , query = Nothing
     , fragment = Nothing
     }

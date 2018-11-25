@@ -23,31 +23,92 @@ async function startServer() {
     bot.ports.errorPort.subscribe(function (errorMessage) {
         console.error(errorMessage);
     });
-    bot.ports.sendMessagesPort.subscribe(function (messages) {
-        messages.reduce(async (promise, message) => {
+    bot.ports.methodPort.subscribe(function (methods) {
+        methods.reduce(async (promise, method) => {
             await promise;
 
-            function nullToUndefined(object, field) {
-                object[field] = object[field] == null ? undefined : object[field];
-                return object;
+            switch (method.method) {
+                case "sendMessage":
+                    return sendMessage(method.content);
+                case "answerInlineQuery":
+                    return answerInlineQuery(method.content);
             }
 
-            ["parse_mode", "reply_to_message_id"].forEach(field => {
-                nullToUndefined(message, field);
-            })
-
-            console.log('\nSending message:');
-            console.log(JSON.stringify(message, undefined, 2));
-            await fetch(
-                baseUrl + 'sendMessage',
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(message),
-                }
-            );
         }, Promise.resolve());
     });
+
+    function nullToUndefined(object, field) {
+        object[field] = object[field] == null ? undefined : object[field];
+        return object;
+    }
+
+    async function sendMessage(sendMessage) {
+        ["parse_mode", "reply_to_message_id"].forEach(field => {
+            nullToUndefined(sendMessage, field);
+        })
+
+        const res = await fetch(
+            baseUrl + 'sendMessage',
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(sendMessage),
+            }
+        );
+        const json = await res.json();
+        if (!json.ok) {
+            console.error('\nSending message failed. Wanted to send:');
+            console.error(JSON.stringify(sendMessage, undefined, 2));
+            console.error('Received error:');
+            console.error(JSON.stringify(json, undefined, 2));
+        } else {
+            console.log('\nSuccessfully sent message:');
+            console.log(JSON.stringify(sendMessage, undefined, 2));
+        }
+    }
+
+    async function answerInlineQuery(inlineQuery) {
+        ["cache_time", "is_personal", "next_offset"].forEach(field => {
+            nullToUndefined(inlineQuery, field);
+        })
+        inlineQuery.results.forEach(result => {
+            if (result.type == "article") {
+                [
+                    "url",
+                    "hide_url",
+                    "thumb_url",
+                    "thumb_width",
+                    "thumb_height"
+                ].forEach(field => {
+                    nullToUndefined(result, field);
+                });
+
+                if (result.input_message_content &&
+                    result.input_message_content.parse_mode == null) {
+                    result.input_message_content.parse_mode = undefined;
+                }
+            }
+        });
+
+        const res = await fetch(
+            baseUrl + 'answerInlineQuery',
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(inlineQuery),
+            }
+        );
+        const json = await res.json();
+        if (!json.ok) {
+            console.error('\nAnswering inline query failed. Wanted to send:');
+            console.error(JSON.stringify(inlineQuery, undefined, 2));
+            console.error('Received error:');
+            console.error(JSON.stringify(json, undefined, 2));
+        } else {
+            console.log('\nSuccessfully answered inline query:');
+            console.log(JSON.stringify(inlineQuery, undefined, 2));
+        }
+    }
 
     // RUN
     console.info('Bot started.')

@@ -345,6 +345,83 @@ suite =
                                     []
                             )
             ]
+        , describe "InlineQuery"
+            [ test "valid full" <|
+                \_ ->
+                    Decode.decodeString
+                        Telegram.decodeInlineQuery
+                        """
+                        {
+                            "id": "2348",
+                            "from": {
+                                "id": 59234,
+                                "is_bot": false,
+                                "first_name": "Minimalist"
+                            },
+                            "query": "search for me",
+                            "offset": "23"
+                        }
+                        """
+                        |> Expect.equal
+                            (Ok <|
+                                Telegram.InlineQuery
+                                    (Telegram.makeTestStringId "2348")
+                                    (Telegram.User (Telegram.makeTestId 59234)
+                                        False
+                                        "Minimalist"
+                                        Nothing
+                                        Nothing
+                                        Nothing
+                                    )
+                                    "search for me"
+                                    "23"
+                            )
+            , test "non-numerical id and offset" <|
+                \_ ->
+                    Decode.decodeString
+                        Telegram.decodeInlineQuery
+                        """
+                        {
+                            "id": "i am the id",
+                            "from": {
+                                "id": 59234,
+                                "is_bot": false,
+                                "first_name": "Minimalist"
+                            },
+                            "query": "stuff",
+                            "offset": "i am the offset"
+                        }
+                        """
+                        |> Expect.equal
+                            (Ok <|
+                                Telegram.InlineQuery
+                                    (Telegram.makeTestStringId "i am the id")
+                                    (Telegram.User (Telegram.makeTestId 59234)
+                                        False
+                                        "Minimalist"
+                                        Nothing
+                                        Nothing
+                                        Nothing
+                                    )
+                                    "stuff"
+                                    "i am the offset"
+                            )
+            , test "invalid user" <|
+                \_ ->
+                    expectError
+                        (Decode.decodeString
+                            Telegram.decodeInlineQuery
+                            """
+                                {
+                                    "id": "2348",
+                                    "from": "invalid user",
+                                    "query": "search for me",
+                                    "offset": "23"
+                                }
+                                """
+                        )
+                        (expectErrorMessageToContain "invalid user")
+            ]
         , describe "Update"
             [ test "valid minimal MessageUpdate" <|
                 \_ ->
@@ -376,6 +453,43 @@ suite =
                                             (Telegram.Chat (Telegram.makeTestId 570129) Telegram.Private)
                                             "i am the message text"
                                             []
+                            )
+            , test "valid minimal InlineQuery" <|
+                \_ ->
+                    Decode.decodeString
+                        Telegram.decodeUpdate
+                        """
+                        {
+                            "update_id": 15780,
+                            "inline_query": {
+                                "id": "43",
+                                "from": {
+                                    "id": 59234,
+                                    "is_bot": false,
+                                    "first_name": "Minimalist"
+                                },
+                                "query": "stuff",
+                                "offset": "88"
+                            }
+                        }
+                        """
+                        |> Expect.equal
+                            (Ok <|
+                                Telegram.Update
+                                    (Telegram.makeTestId 15780)
+                                <|
+                                    Telegram.InlineQueryUpdate <|
+                                        Telegram.InlineQuery
+                                            (Telegram.makeTestStringId "43")
+                                            (Telegram.User (Telegram.makeTestId 59234)
+                                                False
+                                                "Minimalist"
+                                                Nothing
+                                                Nothing
+                                                Nothing
+                                            )
+                                            "stuff"
+                                            "88"
                             )
             ]
         ]

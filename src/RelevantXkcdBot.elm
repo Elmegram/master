@@ -34,38 +34,133 @@ handle newUpdate model =
             else
                 let
                     getXkcd =
-                        RelevantXkcd.fetch
+                        RelevantXkcd.fetchIds
                             message.text
                             (\result ->
                                 case result of
-                                    Ok xkcd ->
-                                        xkcd.previewUrl
-                                            |> Url.toString
-                                            |> SendMessage message.chat
+                                    Ok ids ->
+                                        case ids of
+                                            bestMatch :: _ ->
+                                                FetchXkcd
+                                                    (\res ->
+                                                        case res of
+                                                            Ok xkcd ->
+                                                                SendXkcdMessage message.chat xkcd
+
+                                                            Err err ->
+                                                                SendMessage message.chat "Error getting xkcds."
+                                                    )
+                                                    bestMatch
+
+                                            _ ->
+                                                SendMessage message.chat "No relevant xkcd found."
 
                                     Err _ ->
-                                        Fail message.chat
+                                        SendMessage message.chat "Error getting xkcds."
                             )
                 in
                 do [] model getXkcd
 
+        Telegram.InlineQueryUpdate inlineQuery ->
+            let
+                getXkcd =
+                    RelevantXkcd.fetchIds
+                        inlineQuery.query
+                        (\result ->
+                            case result of
+                                Ok ids ->
+                                    FetchXkcds
+                                        (\res ->
+                                            case res of
+                                                Ok xkcds ->
+                                                    AnswerQuery inlineQuery xkcds
+
+                                                Err err ->
+                                                    AnswerQuery inlineQuery []
+                                        )
+                                        ids
+
+                                Err _ ->
+                                    NoOp
+                        )
+            in
+            do [] model getXkcd
+
 
 type Msg
-    = SendMessage Telegram.Chat String
-    | Fail Telegram.Chat
+    = NoOp
+    | SendMessage Telegram.Chat String
+    | AnswerQuery Telegram.InlineQuery (List RelevantXkcd.Xkcd)
+    | FetchXkcd (Result String RelevantXkcd.Xkcd -> Msg) RelevantXkcd.XkcdId
+    | FetchXkcds (Result String (List RelevantXkcd.Xkcd) -> Msg) (List RelevantXkcd.XkcdId)
+    | SendXkcdMessage Telegram.Chat RelevantXkcd.Xkcd
 
 
 update : Msg -> Model -> Response
 update msg model =
     case msg of
-        Fail chat ->
-            simply [ Elmegram.answer chat "Sorry, I had a problem finding a joke..." ] model
+        NoOp ->
+            keep model
 
-        SendMessage chat text ->
-            simply [ Elmegram.answer chat text ] model
+        SendMessage to text ->
+            simply [ Elmegram.answer to text ] model
+
+        AnswerQuery to xkcds ->
+            let
+                results =
+                    List.map
+                        (\xkcd ->
+                            let
+                                article =
+                                    Elmegram.makeMinimalInlineQueryResultArticle
+                                        { id = String.fromInt <| RelevantXkcd.getId xkcd
+                                        , title = RelevantXkcd.getTitle xkcd
+                                        , message = Elmegram.makeInputMessageFormatted <| xkcdText xkcd
+                                        }
+                            in
+                            { article
+                                | description = RelevantXkcd.getTranscript xkcd
+                                , url = Just <| Telegram.Hide (RelevantXkcd.getComicUrl xkcd)
+                                , thumb_url = Just (RelevantXkcd.getPreviewUrl xkcd)
+                            }
+                                |> Elmegram.inlineQueryResultFromArticle
+                        )
+                        xkcds
+
+                incompleteInlineQueryAnswer =
+                    Elmegram.makeAnswerInlineQuery to results
+
+                rawInlineQueryAnswer =
+                    { incompleteInlineQueryAnswer
+                        | next_offset = Just ""
+                    }
+
+                debugInlineQuery =
+                    { rawInlineQueryAnswer
+                        | cache_time = Just 0
+                    }
+            in
+            simply [ debugInlineQuery |> Elmegram.methodFromInlineQuery ] model
+
+        FetchXkcd tag id ->
+            do [] model (RelevantXkcd.fetchXkcd tag id)
+
+        FetchXkcds tag ids ->
+            do [] model (RelevantXkcd.fetchXkcds tag ids)
+
+        SendXkcdMessage to xkcd ->
+            simply [ Elmegram.answerFormatted to (xkcdText xkcd) ] model
 
 
-helpMessage : Telegram.User -> Telegram.Chat -> Telegram.SendMessage
+xkcdText : RelevantXkcd.Xkcd -> Elmegram.FormattedText
+xkcdText xkcd =
+    Elmegram.format Telegram.Html
+        (("<b>" ++ RelevantXkcd.getTitle xkcd ++ "</b>\n")
+            ++ (Url.toString <| RelevantXkcd.getComicUrl xkcd)
+        )
+
+
+helpMessage : Telegram.User -> Telegram.Chat -> Elmegram.Method
 helpMessage self chat =
     Elmegram.answerFormatted
         chat
@@ -85,7 +180,7 @@ helpText self =
         ++ "You can also just send me messages here. I will answer with the xkcd most relevant to what you sent me."
 
 
-commandNotFoundMessage : Telegram.User -> Telegram.TextMessage -> Telegram.SendMessage
+commandNotFoundMessage : Telegram.User -> Telegram.TextMessage -> Elmegram.Method
 commandNotFoundMessage self message =
     Elmegram.replyFormatted
         message
@@ -99,17 +194,17 @@ commandNotFoundMessage self message =
 -- HELPERS
 
 
-do : List Telegram.SendMessage -> Model -> Cmd Msg -> Response
-do messages model cmd =
-    { messages = messages
+do : List Elmegram.Method -> Model -> Cmd Msg -> Response
+do methods model cmd =
+    { methods = methods
     , model = model
     , command = cmd
     }
 
 
-simply : List Telegram.SendMessage -> Model -> Response
-simply messages model =
-    { messages = messages
+simply : List Elmegram.Method -> Model -> Response
+simply methods model =
+    { methods = methods
     , model = model
     , command = Cmd.none
     }
@@ -117,7 +212,7 @@ simply messages model =
 
 keep : Model -> Response
 keep model =
-    { messages = []
+    { methods = []
     , model = model
     , command = Cmd.none
     }

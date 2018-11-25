@@ -1,7 +1,14 @@
 module Telegram exposing
-    ( Bounds
+    ( AnswerInlineQuery
+    , ArticleUrl(..)
+    , Bounds
     , Chat
     , ChatType(..)
+    , InlineQuery
+    , InlineQueryResult(..)
+    , InlineQueryResultArticle
+    , InputMessageContent(..)
+    , InputTextMessageContent
     , MessageEntity(..)
     , ParseMode(..)
     , SendMessage
@@ -12,12 +19,15 @@ module Telegram exposing
     , User
     , decodeBounds
     , decodeChat
+    , decodeInlineQuery
     , decodeMessageEntity
     , decodeTextMessage
     , decodeUpdate
     , decodeUser
+    , encodeAnswerInlineQuery
     , encodeSendMessage
     , makeTestId
+    , makeTestStringId
     )
 
 import Json.Decode as Decode
@@ -41,6 +51,7 @@ type UpdateId
 
 type UpdateContent
     = MessageUpdate TextMessage
+    | InlineQueryUpdate InlineQuery
 
 
 decodeUpdate : Decode.Decoder Update
@@ -48,7 +59,11 @@ decodeUpdate =
     Decode.map2
         Update
         (Decode.field "update_id" Decode.int |> Decode.map Id)
-        (Decode.field "message" decodeTextMessage |> Decode.map MessageUpdate)
+        (Decode.oneOf
+            [ Decode.field "message" decodeTextMessage |> Decode.map MessageUpdate
+            , Decode.field "inline_query" decodeInlineQuery |> Decode.map InlineQueryUpdate
+            ]
+        )
 
 
 type alias TextMessage =
@@ -218,6 +233,28 @@ decodeTextMessage =
         decodeEntities
 
 
+type alias InlineQuery =
+    { id : Id InlineQueryTag
+    , from : User
+    , query : String
+    , offset : String
+    }
+
+
+type InlineQueryTag
+    = InlineQueryTag
+
+
+decodeInlineQuery : Decode.Decoder InlineQuery
+decodeInlineQuery =
+    Decode.map4
+        InlineQuery
+        (Decode.field "id" Decode.string |> Decode.map IdString)
+        (Decode.field "from" decodeUser)
+        (Decode.field "query" Decode.string)
+        (Decode.field "offset" Decode.string)
+
+
 type alias Chat =
     { id : Id ChatTag
     , type_ : ChatType
@@ -290,11 +327,17 @@ decodeUser =
 
 type Id a
     = Id Int
+    | IdString String
 
 
 encodeId : Id a -> Encode.Value
-encodeId (Id id) =
-    Encode.int id
+encodeId id =
+    case id of
+        Id rawId ->
+            Encode.int rawId
+
+        IdString rawId ->
+            Encode.string rawId
 
 
 
@@ -314,33 +357,154 @@ type ParseMode
     | Html
 
 
+encodeParseMode : ParseMode -> Encode.Value
+encodeParseMode mode =
+    case mode of
+        Markdown ->
+            Encode.string "Markdown"
+
+        Html ->
+            Encode.string "HTML"
+
+
 encodeSendMessage : SendMessage -> Encode.Value
 encodeSendMessage sendMessage =
-    let
-        parse_mode =
-            Maybe.map
-                (\mode ->
-                    case mode of
-                        Markdown ->
-                            Encode.string "Markdown"
-
-                        Html ->
-                            Encode.string "HTML"
-                )
-                sendMessage.parse_mode
-                |> Maybe.withDefault Encode.null
-
-        reply_to_message_id =
-            Maybe.map
-                (\(Id id) -> Encode.int id)
-                sendMessage.reply_to_message_id
-                |> Maybe.withDefault Encode.null
-    in
     Encode.object
         [ ( "chat_id", encodeId sendMessage.chat_id )
         , ( "text", Encode.string sendMessage.text )
-        , ( "parse_mode", parse_mode )
-        , ( "reply_to_message_id", reply_to_message_id )
+        , ( "parse_mode", encodeMaybe encodeParseMode sendMessage.parse_mode )
+        , ( "reply_to_message_id", encodeMaybe encodeId sendMessage.reply_to_message_id )
+        ]
+
+
+type alias AnswerInlineQuery =
+    { inline_query_id : Id InlineQueryTag
+    , results : List InlineQueryResult
+    , cache_time : Maybe Int
+    , is_personal : Maybe Bool
+    , next_offset : Maybe String
+    , switch_pm : Maybe SwitchPm
+    }
+
+
+type alias SwitchPm =
+    { text : String
+    , parameter : Maybe String
+    }
+
+
+encodeAnswerInlineQuery : AnswerInlineQuery -> Encode.Value
+encodeAnswerInlineQuery inlineQuery =
+    let
+        switchPm =
+            case inlineQuery.switch_pm of
+                Just { text, parameter } ->
+                    [ ( "switch_pm_text", Encode.string text )
+                    , ( "switch_pm_parameter", encodeMaybe Encode.string parameter )
+                    ]
+
+                Nothing ->
+                    []
+    in
+    Encode.object
+        ([ ( "inline_query_id", encodeId inlineQuery.inline_query_id )
+         , ( "results", Encode.list encodeInlineQueryResult inlineQuery.results )
+         , ( "cache_time", encodeMaybe Encode.int inlineQuery.cache_time )
+         , ( "is_personal", encodeMaybe Encode.bool inlineQuery.is_personal )
+         , ( "next_offset", encodeMaybe Encode.string inlineQuery.next_offset )
+         ]
+            ++ switchPm
+        )
+
+
+type InlineQueryResult
+    = Article InlineQueryResultArticle
+
+
+encodeInlineQueryResult : InlineQueryResult -> Encode.Value
+encodeInlineQueryResult inlineQueryResult =
+    case inlineQueryResult of
+        Article article ->
+            Encode.object
+                ([ ( "type", Encode.string "article" )
+                 ]
+                    ++ objectFromInlineQueryResultArticle article
+                )
+
+
+type alias InlineQueryResultArticle =
+    { id : String
+    , title : String
+    , description : Maybe String
+    , input_message_content : InputMessageContent
+    , url : Maybe ArticleUrl
+    , thumb_url : Maybe Url
+    }
+
+
+type ArticleUrl
+    = Show Url
+    | Hide Url
+
+
+objectFromArticleUrl : ArticleUrl -> List ( String, Encode.Value )
+objectFromArticleUrl articleUrl =
+    let
+        ( url, hideUrl ) =
+            case articleUrl of
+                Show link ->
+                    ( link, Encode.bool False )
+
+                Hide link ->
+                    ( link, Encode.bool True )
+    in
+    [ ( "url", Url.toString url |> Encode.string )
+    , ( "hide_url", hideUrl )
+    ]
+
+
+objectFromInlineQueryResultArticle : InlineQueryResultArticle -> List ( String, Encode.Value )
+objectFromInlineQueryResultArticle article =
+    let
+        articleUrl =
+            case article.url of
+                Just url ->
+                    objectFromArticleUrl url
+
+                Nothing ->
+                    []
+    in
+    [ ( "id", Encode.string article.id )
+    , ( "title", Encode.string article.title )
+    , ( "input_message_content", encodeInputMessageContent article.input_message_content )
+    , ( "description", encodeMaybe Encode.string article.description )
+    , ( "thumb_url", encodeMaybe (Url.toString >> Encode.string) article.thumb_url )
+    ]
+        ++ articleUrl
+
+
+type InputMessageContent
+    = Text InputTextMessageContent
+
+
+encodeInputMessageContent : InputMessageContent -> Encode.Value
+encodeInputMessageContent content =
+    case content of
+        Text textContent ->
+            encodeInputTextMessageContent textContent
+
+
+type alias InputTextMessageContent =
+    { message_text : String
+    , parse_mode : Maybe ParseMode
+    }
+
+
+encodeInputTextMessageContent : InputTextMessageContent -> Encode.Value
+encodeInputTextMessageContent content =
+    Encode.object
+        [ ( "message_text", Encode.string content.message_text )
+        , ( "parse_mode", encodeMaybe encodeParseMode content.parse_mode )
         ]
 
 
@@ -351,3 +515,18 @@ encodeSendMessage sendMessage =
 makeTestId : Int -> Id a
 makeTestId id =
     Id id
+
+
+makeTestStringId : String -> Id a
+makeTestStringId id =
+    IdString id
+
+
+
+--HELPERS
+
+
+encodeMaybe : (a -> Encode.Value) -> Maybe a -> Encode.Value
+encodeMaybe map maybe =
+    Maybe.map map maybe
+        |> Maybe.withDefault Encode.null
