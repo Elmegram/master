@@ -2,6 +2,13 @@
 # yarn lockfile v1
 
 
+elmegram.js@Elmegram/elmegram.js#e376f7ab6cc9b5ccbb40c32b38141776b4d0cae7:
+  version "1.0.0"
+  resolved "https://codeload.github.com/Elmegram/elmegram.js/tar.gz/e376f7ab6cc9b5ccbb40c32b38141776b4d0cae7"
+  dependencies:
+    node-fetch "^2.3.0"
+    xhr2 "^0.1.4"
+
 node-fetch@^2.3.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.3.0.tgz#1a1d940bbfb916a1d3e0219f037e89e71f8c5fa5"
