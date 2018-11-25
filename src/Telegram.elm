@@ -1,5 +1,6 @@
 module Telegram exposing
     ( AnswerInlineQuery
+    , ArticleUrl(..)
     , Bounds
     , Chat
     , ChatType(..)
@@ -436,29 +437,73 @@ type alias InlineQueryResultArticle =
     , title : String
     , description : Maybe String
     , input_message_content : InputMessageContent
+    , url : Maybe ArticleUrl
+    , thumbnail : Maybe Thumbnail
     }
 
 
-type alias ArticleUrl =
-    { url : Url
-    , hide_url : Maybe Bool
-    }
+type ArticleUrl
+    = Show Url
+    | Hide Url
+
+
+objectFromArticleUrl : ArticleUrl -> List ( String, Encode.Value )
+objectFromArticleUrl articleUrl =
+    let
+        ( url, hideUrl ) =
+            case articleUrl of
+                Show link ->
+                    ( link, Encode.bool False )
+
+                Hide link ->
+                    ( link, Encode.bool True )
+    in
+    [ ( "url", Url.toString url |> Encode.string )
+    , ( "hide_url", hideUrl )
+    ]
 
 
 type alias Thumbnail =
-    { thumb_url : Url
-    , thumb_width : Maybe Int
-    , thumb_height : Maybe Int
+    { url : Url
+    , width : Maybe Int
+    , height : Maybe Int
     }
+
+
+objectFromThumbnail : Thumbnail -> List ( String, Encode.Value )
+objectFromThumbnail thumbnail =
+    [ ( "thumb_url", Url.toString thumbnail.url |> Encode.string )
+    , ( "thumb_width", encodeMaybe Encode.int thumbnail.width )
+    , ( "thumb_height", encodeMaybe Encode.int thumbnail.height )
+    ]
 
 
 objectFromInlineQueryResultArticle : InlineQueryResultArticle -> List ( String, Encode.Value )
 objectFromInlineQueryResultArticle article =
+    let
+        articleUrl =
+            case article.url of
+                Just url ->
+                    objectFromArticleUrl url
+
+                Nothing ->
+                    []
+
+        thumbnail =
+            case article.thumbnail of
+                Just thumb ->
+                    objectFromThumbnail thumb
+
+                Nothing ->
+                    []
+    in
     [ ( "id", Encode.string article.id )
     , ( "title", Encode.string article.title )
     , ( "input_message_content", encodeInputMessageContent article.input_message_content )
     , ( "description", encodeMaybe Encode.string article.description )
     ]
+        ++ articleUrl
+        ++ thumbnail
 
 
 type InputMessageContent

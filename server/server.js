@@ -72,10 +72,21 @@ async function startServer() {
             nullToUndefined(inlineQuery, field);
         })
         inlineQuery.results.forEach(result => {
-            if (result.type == "article" &&
-                result.input_message_content &&
-                result.input_message_content.parse_mode == null) {
-                result.input_message_content.parse_mode = undefined;
+            if (result.type == "article") {
+                [
+                    "url",
+                    "hide_url",
+                    "thumb_url",
+                    "thumb_width",
+                    "thumb_height"
+                ].forEach(field => {
+                    nullToUndefined(result, field);
+                });
+
+                if (result.input_message_content &&
+                    result.input_message_content.parse_mode == null) {
+                    result.input_message_content.parse_mode = undefined;
+                }
             }
         });
 

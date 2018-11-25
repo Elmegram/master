@@ -10,9 +10,11 @@ module Elmegram exposing
     , format
     , getDisplayName
     , inlineQueryResultArticle
+    , inlineQueryResultFromArticle
     , makeAnswerInlineQuery
     , makeInputMessage
     , makeInputMessageFormatted
+    , makeMinimalInlineQueryResultArticle
     , matchesCommand
     , methodFromInlineQuery
     , methodFromMessage
@@ -202,6 +204,8 @@ makeMinimalInlineQueryResultArticle { id, title, message } =
     , title = title
     , input_message_content = message
     , description = Nothing
+    , url = Nothing
+    , thumbnail = Nothing
     }
 
 
