@@ -4,6 +4,7 @@ import Elmegram
 import Http
 import Json.Decode as Decode
 import RelevantXkcd
+import String.Extra as String
 import Task exposing (Task)
 import Telegram
 import Url
@@ -161,7 +162,7 @@ update msg model =
 
                 answer =
                     { incompleteAnswer
-                        | text = Just <| RelevantXkcd.getMouseOver xkcd
+                        | text = Just <| (RelevantXkcd.getMouseOver xkcd |> String.ellipsis 200)
                         , show_alert = True
                     }
             in
