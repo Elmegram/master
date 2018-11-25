@@ -114,7 +114,7 @@ update msg model =
                                 article =
                                     Elmegram.makeMinimalInlineQueryResultArticle
                                         { id = String.fromInt <| RelevantXkcd.getId xkcd
-                                        , title = RelevantXkcd.getTitle xkcd
+                                        , title = xkcdHeading xkcd
                                         , message = Elmegram.makeInputMessageFormatted <| xkcdText xkcd
                                         }
                             in
@@ -152,10 +152,16 @@ update msg model =
             simply [ Elmegram.answerFormatted to (xkcdText xkcd) ] model
 
 
+xkcdHeading : RelevantXkcd.Xkcd -> String
+xkcdHeading xkcd =
+    ("#" ++ (String.fromInt <| RelevantXkcd.getId xkcd) ++ ": ")
+        ++ RelevantXkcd.getTitle xkcd
+
+
 xkcdText : RelevantXkcd.Xkcd -> Elmegram.FormattedText
 xkcdText xkcd =
     Elmegram.format Telegram.Html
-        (("<b>" ++ RelevantXkcd.getTitle xkcd ++ "</b>\n")
+        (("<b>" ++ xkcdHeading xkcd ++ "</b>\n")
             ++ (Url.toString <| RelevantXkcd.getComicUrl xkcd)
         )
 
