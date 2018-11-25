@@ -11,11 +11,15 @@ module Elmegram exposing
     , getDisplayName
     , inlineQueryResultArticle
     , inlineQueryResultFromArticle
+    , makeAnswer
+    , makeAnswerCallbackQuery
+    , makeAnswerFormatted
     , makeAnswerInlineQuery
     , makeInputMessage
     , makeInputMessageFormatted
     , makeMinimalInlineQueryResultArticle
     , matchesCommand
+    , methodFromAnswerCallbackQuery
     , methodFromInlineQuery
     , methodFromMessage
     , reply
@@ -41,6 +45,7 @@ type alias Response model msg =
 type Method
     = SendMessageMethod Telegram.SendMessage
     | AnswerInlineQueryMethod Telegram.AnswerInlineQuery
+    | AnswerCallbackQueryMethod Telegram.AnswerCallbackQuery
 
 
 encodeMethod : Method -> Encode.Value
@@ -56,6 +61,12 @@ encodeMethod method =
             Encode.object
                 [ ( "method", Encode.string "answerInlineQuery" )
                 , ( "content", Telegram.encodeAnswerInlineQuery inlineQuery )
+                ]
+
+        AnswerCallbackQueryMethod callbackQuery ->
+            Encode.object
+                [ ( "method", Encode.string "answerCallbackQuery" )
+                , ( "content", Telegram.encodeAnswerCallbackQuery callbackQuery )
                 ]
 
 
@@ -111,6 +122,7 @@ makeAnswer to text =
     , text = text
     , parse_mode = Nothing
     , reply_to_message_id = Nothing
+    , reply_markup = Nothing
     }
 
 
@@ -150,6 +162,7 @@ makeReply to text =
     , text = text
     , parse_mode = Nothing
     , reply_to_message_id = Just to.message_id
+    , reply_markup = Nothing
     }
 
 
@@ -206,6 +219,7 @@ makeMinimalInlineQueryResultArticle { id, title, message } =
     , description = Nothing
     , url = Nothing
     , thumb_url = Nothing
+    , reply_markup = Nothing
     }
 
 
@@ -243,6 +257,24 @@ makeInputMessageFormatted (Format mode text) =
 
 methodFromInlineQuery =
     AnswerInlineQueryMethod
+
+
+
+-- ANSWER CALLBACK QUERIES
+
+
+makeAnswerCallbackQuery: Telegram.CallbackQuery -> Telegram.AnswerCallbackQuery
+makeAnswerCallbackQuery to =
+    { callback_query_id = to.id
+    , text = Nothing
+    , show_alert = False
+    , url = Nothing
+    , cache_time = 0
+    }
+
+
+methodFromAnswerCallbackQuery =
+    AnswerCallbackQueryMethod
 
 
 

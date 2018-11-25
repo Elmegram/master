@@ -86,11 +86,33 @@ handle newUpdate model =
             in
             do [] model getXkcd
 
+        Telegram.CallbackQueryUpdate callbackQuery ->
+            case String.toInt callbackQuery.data of
+                Just id ->
+                    do []
+                        model
+                        (RelevantXkcd.fetchXkcd
+                            (\result ->
+                                case result of
+                                    Ok xkcd ->
+                                        AnswerCallback callbackQuery xkcd
+
+                                    Err _ ->
+                                        AnswerCallbackFail callbackQuery
+                            )
+                            id
+                        )
+
+                Nothing ->
+                    simply [ answerCallbackFail callbackQuery ] model
+
 
 type Msg
     = NoOp
     | SendMessage Telegram.Chat String
     | AnswerQuery Telegram.InlineQuery (List RelevantXkcd.Xkcd)
+    | AnswerCallback Telegram.CallbackQuery RelevantXkcd.Xkcd
+    | AnswerCallbackFail Telegram.CallbackQuery
     | FetchXkcd (Result String RelevantXkcd.Xkcd -> Msg) RelevantXkcd.XkcdId
     | FetchXkcds (Result String (List RelevantXkcd.Xkcd) -> Msg) (List RelevantXkcd.XkcdId)
     | SendXkcdMessage Telegram.Chat RelevantXkcd.Xkcd
@@ -114,7 +136,7 @@ update msg model =
                                 article =
                                     Elmegram.makeMinimalInlineQueryResultArticle
                                         { id = String.fromInt <| RelevantXkcd.getId xkcd
-                                        , title = RelevantXkcd.getTitle xkcd
+                                        , title = xkcdHeading xkcd
                                         , message = Elmegram.makeInputMessageFormatted <| xkcdText xkcd
                                         }
                             in
@@ -122,6 +144,7 @@ update msg model =
                                 | description = RelevantXkcd.getTranscript xkcd
                                 , url = Just <| Telegram.Hide (RelevantXkcd.getComicUrl xkcd)
                                 , thumb_url = Just (RelevantXkcd.getPreviewUrl xkcd)
+                                , reply_markup = Just (xkcdKeyboard xkcd)
                             }
                                 |> Elmegram.inlineQueryResultFromArticle
                         )
@@ -142,6 +165,22 @@ update msg model =
             in
             simply [ debugInlineQuery |> Elmegram.methodFromInlineQuery ] model
 
+        AnswerCallback to xkcd ->
+            let
+                incompleteAnswer =
+                    Elmegram.makeAnswerCallbackQuery to
+
+                answer =
+                    { incompleteAnswer
+                        | text = Just <| RelevantXkcd.getMouseOver xkcd
+                        , show_alert = True
+                    }
+            in
+            simply [ answer |> Elmegram.methodFromAnswerCallbackQuery ] model
+
+        AnswerCallbackFail to ->
+            simply [ answerCallbackFail to ] model
+
         FetchXkcd tag id ->
             do [] model (RelevantXkcd.fetchXkcd tag id)
 
@@ -149,15 +188,43 @@ update msg model =
             do [] model (RelevantXkcd.fetchXkcds tag ids)
 
         SendXkcdMessage to xkcd ->
-            simply [ Elmegram.answerFormatted to (xkcdText xkcd) ] model
+            let
+                incompleteAnswer =
+                    Elmegram.makeAnswerFormatted to (xkcdText xkcd)
+
+                answer =
+                    { incompleteAnswer
+                        | reply_markup = Just <| Telegram.InlineKeyboardMarkup (xkcdKeyboard xkcd)
+                    }
+            in
+            simply [ answer |> Elmegram.methodFromMessage ] model
+
+
+xkcdHeading : RelevantXkcd.Xkcd -> String
+xkcdHeading xkcd =
+    ("#" ++ (String.fromInt <| RelevantXkcd.getId xkcd) ++ ": ")
+        ++ RelevantXkcd.getTitle xkcd
 
 
 xkcdText : RelevantXkcd.Xkcd -> Elmegram.FormattedText
 xkcdText xkcd =
     Elmegram.format Telegram.Html
-        (("<b>" ++ RelevantXkcd.getTitle xkcd ++ "</b>\n")
+        (("<b>" ++ xkcdHeading xkcd ++ "</b>\n")
             ++ (Url.toString <| RelevantXkcd.getComicUrl xkcd)
         )
+
+
+xkcdKeyboard : RelevantXkcd.Xkcd -> Telegram.InlineKeyboard
+xkcdKeyboard xkcd =
+    [ [ Telegram.CallbackButton (RelevantXkcd.getId xkcd |> String.fromInt) "Show mouse-over" ]
+    , [ Telegram.UrlButton (RelevantXkcd.getExplainUrl xkcd) "Explain XKCD" ]
+    ]
+
+
+answerCallbackFail : Telegram.CallbackQuery -> Elmegram.Method
+answerCallbackFail to =
+    Elmegram.makeAnswerCallbackQuery to
+        |> Elmegram.methodFromAnswerCallbackQuery
 
 
 helpMessage : Telegram.User -> Telegram.Chat -> Elmegram.Method
