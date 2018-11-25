@@ -2,9 +2,8 @@
 # yarn lockfile v1
 
 
-elmegram.js@Elmegram/elmegram.js#e376f7ab6cc9b5ccbb40c32b38141776b4d0cae7:
+"elmegram.js@file:./packages/elmegram.js":
   version "1.0.0"
-  resolved "https://codeload.github.com/Elmegram/elmegram.js/tar.gz/e376f7ab6cc9b5ccbb40c32b38141776b4d0cae7"
   dependencies:
     node-fetch "^2.3.0"
     xhr2 "^0.1.4"

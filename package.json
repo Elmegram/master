@@ -11,6 +11,6 @@
   },
   "private": true,
   "dependencies": {
-    "elmegram.js": "Elmegram/elmegram.js#e376f7ab6cc9b5ccbb40c32b38141776b4d0cae7"
+    "elmegram.js": "file:./packages/elmegram.js"
   }
 }

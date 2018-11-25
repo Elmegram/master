@@ -4,3 +4,6 @@
 [submodule "packages/elmegram"]
 	path = packages/elmegram
 	url = https://github.com/Elmegram/elmegram.git
+[submodule "packages/elmegram.js"]
+	path = packages/elmegram.js
+	url = https://github.com/Elmegram/elmegram.js.git
