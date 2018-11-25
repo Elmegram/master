@@ -1,7 +1,9 @@
 module RelevantXkcd exposing
     ( Xkcd
     , XkcdId
-    , fetchIds
+    , fetchCurrentXkcd
+    , fetchLatestXkcds
+    , fetchRelevantIds
     , fetchXkcd
     , fetchXkcds
     , getComicUrl
@@ -29,7 +31,7 @@ type Xkcd
 
 
 type alias XkcdContent =
-    { id : Int
+    { id : XkcdId
     , previewUrl : Url
     , title : String
     , mouseOver : String
@@ -88,27 +90,24 @@ getExplainUrl (Xkcd xkcd) =
 -- METHODS
 
 
-fetchIds : String -> (Result String (List XkcdId) -> msg) -> Cmd msg
-fetchIds query tag =
-    Http.request
+fetchRelevantIds : String -> Task String (List XkcdId)
+fetchRelevantIds query =
+    Http.task
         { method = "GET"
         , headers = []
         , url = Url.toString (queryUrl query)
         , body = Http.emptyBody
-        , expect =
-            Http.expectString
-                (Result.mapError
-                    (\err ->
-                        "Error fetching xkcd."
-                    )
-                    >> Result.andThen
-                        (\body ->
+        , resolver =
+            Http.stringResolver
+                (\response ->
+                    case response of
+                        Http.GoodStatus_ _ body ->
                             parseResponse body
-                        )
-                    >> tag
+
+                        _ ->
+                            Err "Error fetching xkcd."
                 )
         , timeout = Nothing
-        , tracker = Nothing
         }
 
 
@@ -122,7 +121,7 @@ parseResponse body =
         -- The first two entries are statistics.
         |> List.drop 2
         |> dropFromEnd 1
-        |> List.map parseXkcd
+        |> List.map parseXkcdId
         |> List.foldl
             (\result list ->
                 Result.map2 (\xkcd existing -> existing ++ [ xkcd ]) result list
@@ -134,8 +133,8 @@ type alias XkcdId =
     Int
 
 
-parseXkcd : String -> Result String XkcdId
-parseXkcd line =
+parseXkcdId : String -> Result String XkcdId
+parseXkcdId line =
     case String.words line of
         idString :: urlString :: [] ->
             case String.toInt idString of
@@ -160,20 +159,13 @@ queryUrl query =
     }
 
 
-fetchXkcd : (Result String Xkcd -> msg) -> XkcdId -> Cmd msg
-fetchXkcd tag id =
-    fetchXkcdTask id
-        |> Task.attempt tag
+fetchXkcds : List XkcdId -> Task String (List Xkcd)
+fetchXkcds ids =
+    Task.sequence (List.map fetchXkcd ids)
 
 
-fetchXkcds : (Result String (List Xkcd) -> msg) -> List XkcdId -> Cmd msg
-fetchXkcds tag ids =
-    Task.sequence (List.map fetchXkcdTask ids)
-        |> Task.attempt tag
-
-
-fetchXkcdTask : XkcdId -> Task String Xkcd
-fetchXkcdTask id =
+fetchXkcd : XkcdId -> Task String Xkcd
+fetchXkcd id =
     Http.task
         { method = "GET"
         , headers = []
@@ -182,46 +174,23 @@ fetchXkcdTask id =
         , resolver =
             Http.stringResolver
                 (\response ->
+                    let
+                        genericError =
+                            Err ("Error fetching xkcd with id " ++ String.fromInt id ++ ".")
+                    in
                     case response of
                         Http.GoodStatus_ _ res ->
-                            let
-                                decodeUrl =
-                                    Decode.string
-                                        |> Decode.andThen
-                                            (\urlString ->
-                                                case Url.fromString urlString of
-                                                    Just url ->
-                                                        Decode.succeed url
+                            parseXkcd res
 
-                                                    Nothing ->
-                                                        Decode.fail ("Invalid url '" ++ urlString ++ "'.")
-                                            )
+                        Http.BadStatus_ { statusCode } _ ->
+                            if statusCode == 404 then
+                                Err ("#" ++ String.fromInt id ++ " is not yet released.")
 
-                                decodeTranscript =
-                                    Decode.string
-                                        |> Decode.map
-                                            (\transcript ->
-                                                if String.isEmpty transcript then
-                                                    Nothing
-
-                                                else
-                                                    Just transcript
-                                            )
-                            in
-                            Decode.decodeString
-                                (Decode.map4
-                                    (XkcdContent id)
-                                    (Decode.field "img" decodeUrl)
-                                    (Decode.field "title" Decode.string)
-                                    (Decode.field "alt" Decode.string)
-                                    (Decode.field "transcript" decodeTranscript)
-                                )
-                                res
-                                |> Result.map Xkcd
-                                |> Result.mapError Decode.errorToString
+                            else
+                                genericError
 
                         _ ->
-                            Err "Error fetching xkcd."
+                            genericError
                 )
         , timeout = Nothing
         }
@@ -233,6 +202,104 @@ xkcdInfoUrl id =
     , host = "xkcd.com"
     , port_ = Nothing
     , path = "/" ++ String.fromInt id ++ "/info.0.json"
+    , query = Nothing
+    , fragment = Nothing
+    }
+
+
+fetchCurrentXkcd : Task String Xkcd
+fetchCurrentXkcd =
+    Http.task
+        { method = "GET"
+        , headers = []
+        , url = Url.toString currentXkcdInfoUrl
+        , body = Http.emptyBody
+        , resolver =
+            Http.stringResolver
+                (\response ->
+                    case response of
+                        Http.GoodStatus_ _ res ->
+                            parseXkcd res
+
+                        _ ->
+                            Err "Error fetching current xkcd."
+                )
+        , timeout = Nothing
+        }
+
+
+fetchLatestXkcds : { amount : Int, offset : Int } -> Task String (List Xkcd)
+fetchLatestXkcds { amount, offset } =
+    fetchCurrentXkcd
+        |> Task.andThen
+            (\currentXkcd ->
+                let
+                    latestId =
+                        getId currentXkcd
+
+                    maxId =
+                        latestId - offset
+
+                    minId =
+                        max 0 (maxId - amount)
+                in
+                List.range minId maxId
+                    |> List.reverse
+                    |> List.map fetchXkcd
+                    |> Task.sequence
+                    |> Task.map
+                        (\xkcds ->
+                            xkcds
+                        )
+            )
+
+
+parseXkcd : String -> Result String Xkcd
+parseXkcd raw =
+    let
+        decodeUrl =
+            Decode.string
+                |> Decode.andThen
+                    (\urlString ->
+                        case Url.fromString urlString of
+                            Just url ->
+                                Decode.succeed url
+
+                            Nothing ->
+                                Decode.fail ("Invalid url '" ++ urlString ++ "'.")
+                    )
+
+        decodeTranscript =
+            Decode.string
+                |> Decode.map
+                    (\transcript ->
+                        if String.isEmpty transcript then
+                            Nothing
+
+                        else
+                            Just transcript
+                    )
+    in
+    Decode.decodeString
+        (Decode.map5
+            XkcdContent
+            (Decode.field "num" Decode.int)
+            (Decode.field "img" decodeUrl)
+            (Decode.field "title" Decode.string)
+            (Decode.field "alt" Decode.string)
+            (Decode.field "transcript" decodeTranscript)
+        )
+        raw
+        |> Result.map Xkcd
+        |> Result.mapError Decode.errorToString
+
+
+currentXkcdInfoUrl : Url
+currentXkcdInfoUrl =
+    { protocol = Url.Https
+    , host = "xkcd.com"
+    , port_ = Nothing
+    , path = "/info.0.json"
     , query = Nothing
     , fragment = Nothing
     }

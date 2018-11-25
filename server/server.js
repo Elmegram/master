@@ -80,6 +80,7 @@ async function startServer() {
         inlineQuery.results.forEach(result => {
             if (result.type == "article") {
                 [
+                    "description",
                     "url",
                     "hide_url",
                     "thumb_url",
@@ -136,12 +137,12 @@ async function startServer() {
         const json = await res.json();
         if (!json.ok) {
             console.error('\nAnswering callback query failed. Wanted to send:');
-            console.error(JSON.stringify(inlineQuery, undefined, 2));
+            console.error(JSON.stringify(callbackQuery, undefined, 2));
             console.error('Received error:');
             console.error(JSON.stringify(json, undefined, 2));
         } else {
             console.log('\nSuccessfully answered callback query:');
-            console.log(JSON.stringify(inlineQuery, undefined, 2));
+            console.log(JSON.stringify(callbackQuery, undefined, 2));
         }
     }
 
