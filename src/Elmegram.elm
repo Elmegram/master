@@ -10,9 +10,12 @@ module Elmegram exposing
     , format
     , getDisplayName
     , inlineQueryResultArticle
+    , makeAnswerInlineQuery
     , makeInputMessage
     , makeInputMessageFormatted
     , matchesCommand
+    , methodFromInlineQuery
+    , methodFromMessage
     , reply
     , replyFormatted
     )
