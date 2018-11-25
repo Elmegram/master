@@ -1,6 +1,7 @@
 port module Main exposing (main)
 
 import Elmegram
+import Elmegram.Runner exposing (..)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Platform
@@ -12,7 +13,7 @@ main =
     Platform.worker
         { init = init
         , update = update
-        , subscriptions = subscriptions
+        , subscriptions = subscriptions incomingUpdatePort NewUpdate
         }
 
 
@@ -124,11 +125,6 @@ port errorPort : String -> Cmd msg
 
 
 port methodPort : Encode.Value -> Cmd msg
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    incomingUpdatePort (Decode.decodeValue Telegram.decodeUpdate >> NewUpdate)
 
 
 port incomingUpdatePort : (Encode.Value -> msg) -> Sub msg
