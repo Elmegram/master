@@ -4,6 +4,7 @@ module RelevantXkcd exposing
     , fetchIds
     , fetchXkcd
     , fetchXkcds
+    , getComicUrl
     , getExplainUrl
     , getId
     , getMouseOver
@@ -59,6 +60,17 @@ getMouseOver (Xkcd xkcd) =
 getTranscript : Xkcd -> Maybe String
 getTranscript (Xkcd xkcd) =
     xkcd.transcript
+
+
+getComicUrl : Xkcd -> Url
+getComicUrl (Xkcd xkcd) =
+    { protocol = Url.Https
+    , host = "xkcd.com"
+    , port_ = Nothing
+    , path = "/" ++ String.fromInt xkcd.id
+    , query = Nothing
+    , fragment = Nothing
+    }
 
 
 getExplainUrl : Xkcd -> Url

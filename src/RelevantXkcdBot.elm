@@ -120,7 +120,7 @@ update msg model =
                             in
                             { article
                                 | description = RelevantXkcd.getTranscript xkcd
-                                , url = Just <| Telegram.Hide (RelevantXkcd.getExplainUrl xkcd)
+                                , url = Just <| Telegram.Hide (RelevantXkcd.getComicUrl xkcd)
                                 , thumb_url = Just (RelevantXkcd.getPreviewUrl xkcd)
                             }
                                 |> Elmegram.inlineQueryResultFromArticle
@@ -156,7 +156,7 @@ xkcdText : RelevantXkcd.Xkcd -> Elmegram.FormattedText
 xkcdText xkcd =
     Elmegram.format Telegram.Html
         (("<b>" ++ RelevantXkcd.getTitle xkcd ++ "</b>\n")
-            ++ (Url.toString <| RelevantXkcd.getPreviewUrl xkcd)
+            ++ (Url.toString <| RelevantXkcd.getComicUrl xkcd)
         )
 
 
