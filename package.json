@@ -11,6 +11,9 @@
   },
   "private": true,
   "dependencies": {
-    "elmegram.js": "file:./packages/elmegram.js"
-  }
+    "elmegram.js": "^1.0.0"
+  },
+  "workspaces": [
+    "packages/elmegram.js"
+  ]
 }
