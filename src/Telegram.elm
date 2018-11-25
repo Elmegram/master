@@ -4,12 +4,16 @@ module Telegram exposing
     , Bounds
     , Chat
     , ChatType(..)
+    , InlineKeyboard
+    , InlineKeyboardButton(..)
+    , InlineKeyboardRow
     , InlineQuery
     , InlineQueryResult(..)
     , InlineQueryResultArticle
     , InputMessageContent(..)
     , InputTextMessageContent
     , MessageEntity(..)
+    , MessageReplyMarkup(..)
     , ParseMode(..)
     , SendMessage
     , TextMessage
@@ -349,6 +353,7 @@ type alias SendMessage =
     , text : String
     , parse_mode : Maybe ParseMode
     , reply_to_message_id : Maybe (Id MessageTag)
+    , reply_markup : Maybe MessageReplyMarkup
     }
 
 
@@ -367,6 +372,17 @@ encodeParseMode mode =
             Encode.string "HTML"
 
 
+type MessageReplyMarkup
+    = InlineKeyboardMarkup InlineKeyboard
+
+
+encodeMessageReplyMarkup : MessageReplyMarkup -> Encode.Value
+encodeMessageReplyMarkup markup =
+    case markup of
+        InlineKeyboardMarkup keyboard ->
+            encodeInlineKeyboard keyboard
+
+
 encodeSendMessage : SendMessage -> Encode.Value
 encodeSendMessage sendMessage =
     Encode.object
@@ -374,6 +390,7 @@ encodeSendMessage sendMessage =
         , ( "text", Encode.string sendMessage.text )
         , ( "parse_mode", encodeMaybe encodeParseMode sendMessage.parse_mode )
         , ( "reply_to_message_id", encodeMaybe encodeId sendMessage.reply_to_message_id )
+        , ( "reply_markup", encodeMaybe encodeMessageReplyMarkup sendMessage.reply_markup )
         ]
 
 
@@ -439,6 +456,7 @@ type alias InlineQueryResultArticle =
     , input_message_content : InputMessageContent
     , url : Maybe ArticleUrl
     , thumb_url : Maybe Url
+    , reply_markup : Maybe InlineKeyboard
     }
 
 
@@ -479,6 +497,7 @@ objectFromInlineQueryResultArticle article =
     , ( "input_message_content", encodeInputMessageContent article.input_message_content )
     , ( "description", encodeMaybe Encode.string article.description )
     , ( "thumb_url", encodeMaybe (Url.toString >> Encode.string) article.thumb_url )
+    , ( "reply_markup", encodeMaybe encodeInlineKeyboard article.reply_markup )
     ]
         ++ articleUrl
 
@@ -505,6 +524,46 @@ encodeInputTextMessageContent content =
     Encode.object
         [ ( "message_text", Encode.string content.message_text )
         , ( "parse_mode", encodeMaybe encodeParseMode content.parse_mode )
+        ]
+
+
+type alias InlineKeyboard =
+    List InlineKeyboardRow
+
+
+type alias InlineKeyboardRow =
+    List InlineKeyboardButton
+
+
+type InlineKeyboardButton
+    = UrlButton Url InlineKeyboardButtonText
+    | CallbackButton String InlineKeyboardButtonText
+
+
+type alias InlineKeyboardButtonText =
+    String
+
+
+encodeInlineKeyboardButton : InlineKeyboardButton -> Encode.Value
+encodeInlineKeyboardButton button =
+    case button of
+        UrlButton url text ->
+            Encode.object
+                [ ( "text", Encode.string text )
+                , ( "url", Url.toString url |> Encode.string )
+                ]
+
+        CallbackButton data text ->
+            Encode.object
+                [ ( "text", Encode.string text )
+                , ( "callback_data", Encode.string data )
+                ]
+
+
+encodeInlineKeyboard : InlineKeyboard -> Encode.Value
+encodeInlineKeyboard keyboard =
+    Encode.object
+        [ ( "inline_keyboard", Encode.list (Encode.list encodeInlineKeyboardButton) keyboard )
         ]
 
 

@@ -122,6 +122,7 @@ update msg model =
                                 | description = RelevantXkcd.getTranscript xkcd
                                 , url = Just <| Telegram.Hide (RelevantXkcd.getComicUrl xkcd)
                                 , thumb_url = Just (RelevantXkcd.getPreviewUrl xkcd)
+                                , reply_markup = Just (xkcdKeyboard xkcd)
                             }
                                 |> Elmegram.inlineQueryResultFromArticle
                         )
@@ -149,7 +150,16 @@ update msg model =
             do [] model (RelevantXkcd.fetchXkcds tag ids)
 
         SendXkcdMessage to xkcd ->
-            simply [ Elmegram.answerFormatted to (xkcdText xkcd) ] model
+            let
+                incompleteAnswer =
+                    Elmegram.makeAnswerFormatted to (xkcdText xkcd)
+
+                answer =
+                    { incompleteAnswer
+                        | reply_markup = Just <| Telegram.InlineKeyboardMarkup (xkcdKeyboard xkcd)
+                    }
+            in
+            simply [ answer |> Elmegram.methodFromMessage ] model
 
 
 xkcdHeading : RelevantXkcd.Xkcd -> String
@@ -164,6 +174,11 @@ xkcdText xkcd =
         (("<b>" ++ xkcdHeading xkcd ++ "</b>\n")
             ++ (Url.toString <| RelevantXkcd.getComicUrl xkcd)
         )
+
+
+xkcdKeyboard : RelevantXkcd.Xkcd -> Telegram.InlineKeyboard
+xkcdKeyboard xkcd =
+    [ [ Telegram.UrlButton (RelevantXkcd.getExplainUrl xkcd) "Explain XKCD" ] ]
 
 
 helpMessage : Telegram.User -> Telegram.Chat -> Elmegram.Method

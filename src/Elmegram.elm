@@ -11,6 +11,8 @@ module Elmegram exposing
     , getDisplayName
     , inlineQueryResultArticle
     , inlineQueryResultFromArticle
+    , makeAnswer
+    , makeAnswerFormatted
     , makeAnswerInlineQuery
     , makeInputMessage
     , makeInputMessageFormatted
@@ -111,6 +113,7 @@ makeAnswer to text =
     , text = text
     , parse_mode = Nothing
     , reply_to_message_id = Nothing
+    , reply_markup = Nothing
     }
 
 
@@ -150,6 +153,7 @@ makeReply to text =
     , text = text
     , parse_mode = Nothing
     , reply_to_message_id = Just to.message_id
+    , reply_markup = Nothing
     }
 
 
@@ -206,6 +210,7 @@ makeMinimalInlineQueryResultArticle { id, title, message } =
     , description = Nothing
     , url = Nothing
     , thumb_url = Nothing
+    , reply_markup = Nothing
     }
 
 

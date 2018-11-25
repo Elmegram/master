@@ -43,7 +43,11 @@ async function startServer() {
     }
 
     async function sendMessage(sendMessage) {
-        ["parse_mode", "reply_to_message_id"].forEach(field => {
+        [
+            "parse_mode",
+            "reply_to_message_id",
+            "reply_markup"
+        ].forEach(field => {
             nullToUndefined(sendMessage, field);
         })
 
@@ -78,7 +82,8 @@ async function startServer() {
                     "hide_url",
                     "thumb_url",
                     "thumb_width",
-                    "thumb_height"
+                    "thumb_height",
+                    "reply_markup"
                 ].forEach(field => {
                     nullToUndefined(result, field);
                 });
