@@ -110,16 +110,37 @@ update msg model =
                 results =
                     List.map
                         (\xkcd ->
-                            Elmegram.inlineQueryResultArticle
-                                { id = String.fromInt <| RelevantXkcd.getId xkcd
-                                , title = RelevantXkcd.getTitle xkcd
-                                , description = RelevantXkcd.getTranscript xkcd |> Maybe.withDefault "No description available."
-                                , message = Elmegram.makeInputMessageFormatted <| xkcdText xkcd
-                                }
+                            let
+                                article =
+                                    Elmegram.makeMinimalInlineQueryResultArticle
+                                        { id = String.fromInt <| RelevantXkcd.getId xkcd
+                                        , title = RelevantXkcd.getTitle xkcd
+                                        , message = Elmegram.makeInputMessageFormatted <| xkcdText xkcd
+                                        }
+                            in
+                            { article
+                                | description = RelevantXkcd.getTranscript xkcd
+                                , url = Just <| Telegram.Hide (RelevantXkcd.getExplainUrl xkcd)
+                                , thumb_url = Just (RelevantXkcd.getPreviewUrl xkcd)
+                            }
+                                |> Elmegram.inlineQueryResultFromArticle
                         )
                         xkcds
+
+                incompleteInlineQueryAnswer =
+                    Elmegram.makeAnswerInlineQuery to results
+
+                rawInlineQueryAnswer =
+                    { incompleteInlineQueryAnswer
+                        | next_offset = Just ""
+                    }
+
+                debugInlineQuery =
+                    { rawInlineQueryAnswer
+                        | cache_time = Just 0
+                    }
             in
-            simply [ Elmegram.answerInlineQuery to results ] model
+            simply [ debugInlineQuery |> Elmegram.methodFromInlineQuery ] model
 
         FetchXkcd tag id ->
             do [] model (RelevantXkcd.fetchXkcd tag id)
