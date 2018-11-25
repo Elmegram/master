@@ -365,7 +365,7 @@ suite =
                         |> Expect.equal
                             (Ok <|
                                 Telegram.InlineQuery
-                                    "2348"
+                                    (Telegram.makeTestStringId "2348")
                                     (Telegram.User (Telegram.makeTestId 59234)
                                         False
                                         "Minimalist"
@@ -395,7 +395,7 @@ suite =
                         |> Expect.equal
                             (Ok <|
                                 Telegram.InlineQuery
-                                    "i am the id"
+                                    (Telegram.makeTestStringId "i am the id")
                                     (Telegram.User (Telegram.makeTestId 59234)
                                         False
                                         "Minimalist"
@@ -480,7 +480,7 @@ suite =
                                 <|
                                     Telegram.InlineQueryUpdate <|
                                         Telegram.InlineQuery
-                                            "43"
+                                            (Telegram.makeTestStringId "43")
                                             (Telegram.User (Telegram.makeTestId 59234)
                                                 False
                                                 "Minimalist"

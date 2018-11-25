@@ -26,6 +26,7 @@ module Telegram exposing
     , encodeAnswerInlineQuery
     , encodeSendMessage
     , makeTestId
+    , makeTestStringId
     )
 
 import Json.Decode as Decode
@@ -232,18 +233,22 @@ decodeTextMessage =
 
 
 type alias InlineQuery =
-    { id : String
+    { id : Id InlineQueryTag
     , from : User
     , query : String
     , offset : String
     }
 
 
+type InlineQueryTag
+    = InlineQueryTag
+
+
 decodeInlineQuery : Decode.Decoder InlineQuery
 decodeInlineQuery =
     Decode.map4
         InlineQuery
-        (Decode.field "id" Decode.string)
+        (Decode.field "id" Decode.string |> Decode.map IdString)
         (Decode.field "from" decodeUser)
         (Decode.field "query" Decode.string)
         (Decode.field "offset" Decode.string)
@@ -321,11 +326,17 @@ decodeUser =
 
 type Id a
     = Id Int
+    | IdString String
 
 
 encodeId : Id a -> Encode.Value
-encodeId (Id id) =
-    Encode.int id
+encodeId id =
+    case id of
+        Id rawId ->
+            Encode.int rawId
+
+        IdString rawId ->
+            Encode.string rawId
 
 
 
@@ -366,7 +377,7 @@ encodeSendMessage sendMessage =
 
 
 type alias AnswerInlineQuery =
-    { inline_query_id : String
+    { inline_query_id : Id InlineQueryTag
     , results : List InlineQueryResult
     , cache_time : Maybe Int
     , is_personal : Maybe Bool
@@ -395,7 +406,7 @@ encodeAnswerInlineQuery inlineQuery =
                     []
     in
     Encode.object
-        ([ ( "inline_query_id", Encode.string inlineQuery.inline_query_id )
+        ([ ( "inline_query_id", encodeId inlineQuery.inline_query_id )
          , ( "results", Encode.list encodeInlineQueryResult inlineQuery.results )
          , ( "cache_time", encodeMaybe Encode.int inlineQuery.cache_time )
          , ( "is_personal", encodeMaybe Encode.bool inlineQuery.is_personal )
@@ -482,6 +493,11 @@ encodeInputTextMessageContent content =
 makeTestId : Int -> Id a
 makeTestId id =
     Id id
+
+
+makeTestStringId : String -> Id a
+makeTestStringId id =
+    IdString id
 
 
 
