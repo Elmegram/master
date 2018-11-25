@@ -12,7 +12,7 @@ import Telegram
 main =
     Platform.worker
         { init = init Bot.init
-        , update = update Bot.update errorPort
+        , update = update Bot.handle Bot.update errorPort
         , subscriptions = subscriptions incomingUpdatePort NewUpdate
         }
 
@@ -59,11 +59,11 @@ type Msg
     | BotMsg Bot.Msg
 
 
-update : BotUpdate Bot.Model Bot.Msg -> ErrorPort Msg -> Msg -> Model -> ( Model, Cmd Msg )
-update botUpdate error msg model =
+update : BotHandle Bot.Model Bot.Msg -> BotUpdate Bot.Model Bot.Msg -> ErrorPort Msg -> Msg -> Model -> ( Model, Cmd Msg )
+update botHandle botUpdate error msg model =
     case msg of
         NewUpdate result ->
-            processUpdate handleUpdate result model error
+            processUpdate (handleUpdate botHandle) result model error
 
         BotMsg botMsg ->
             botUpdate botMsg model
@@ -92,9 +92,9 @@ processUpdate updateHandler result model error =
             updateHandler newUpdate model
 
 
-handleUpdate : Telegram.Update -> Model -> ( Model, Cmd Msg )
-handleUpdate newUpdate model =
-    Bot.handle newUpdate model
+handleUpdate : BotHandle Bot.Model Bot.Msg -> Telegram.Update -> Model -> ( Model, Cmd Msg )
+handleUpdate botHandle newUpdate model =
+    botHandle newUpdate model
         |> updateFromResponse
 
 
