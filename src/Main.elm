@@ -11,7 +11,7 @@ import Telegram
 
 main =
     Platform.worker
-        { init = init
+        { init = init Bot.init
         , update = update
         , subscriptions = subscriptions incomingUpdatePort NewUpdate
         }
@@ -38,8 +38,8 @@ type alias RawUser =
     }
 
 
-init : RawUser -> ( Model, Cmd Msg )
-init rawBot =
+init : BotInit Model -> RawUser -> ( Model, Cmd Msg )
+init botInit rawBot =
     let
         bot =
             -- Small hack to make type safe ID.
@@ -51,7 +51,7 @@ init rawBot =
             , language_code = rawBot.language_code
             }
     in
-    ( Bot.init bot, Cmd.none )
+    ( botInit bot, Cmd.none )
 
 
 type Msg
