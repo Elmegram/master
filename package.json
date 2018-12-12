@@ -1,14 +1,6 @@
 {
   "name": "elmergram",
   "version": "1.0.0",
-  "main": "server.js",
-  "scripts": {
-    "build": "yarn build:dev --optimize",
-    "build:dev": "elm make ./src/Main.elm --output ./server/bot.js",
-    "start": "node ./server/server.js",
-    "start:dev": "yarn build:dev && yarn start",
-    "start:prod": "yarn build && yarn start"
-  },
   "private": true,
   "dependencies": {
     "elmegram.js": "^1.0.0"
