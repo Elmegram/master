@@ -1,4 +1,4 @@
-port module Main exposing (main)
+port module Main exposing (bot, main)
 
 import Elmegram
 import Elmegram.Runner
@@ -7,11 +7,9 @@ import Telegram
 
 
 main =
-    Elmegram.Runner.bot
-        { init = init
-        , newUpdateMsg = newUpdateMsg
-        , update = update
-        , incomingUpdatePort = incomingUpdatePort
+    Elmegram.Runner.botRunner
+        bot
+        { incomingUpdatePort = incomingUpdatePort
         , methodPort = methodPort
         , errorPort = errorPort
         }
@@ -32,6 +30,13 @@ port errorPort : String -> Cmd msg
 
 
 -- BOT
+
+
+bot =
+    { init = init
+    , newUpdateMsg = newUpdateMsg
+    , update = update
+    }
 
 
 type alias Model =
