@@ -1,5 +1,6 @@
 language: elm
 
 script:
-  - elm-format --validate examples/echobot
-  - elm-test examples/echobot/tests
+  - cd examples/echobot
+  - elm-format --validate .
+  - elm-test
