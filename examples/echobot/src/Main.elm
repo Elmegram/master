@@ -10,7 +10,6 @@ main =
     Elmegram.Runner.botRunner
         bot
         { incomingUpdatePort = incomingUpdatePort
-        , methodPort = methodPort
         , errorPort = errorPort
         }
 
@@ -20,9 +19,6 @@ main =
 
 
 port incomingUpdatePort : (Encode.Value -> msg) -> Sub msg
-
-
-port methodPort : Encode.Value -> Cmd msg
 
 
 port errorPort : String -> Cmd msg
