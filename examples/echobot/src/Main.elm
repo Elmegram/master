@@ -1,7 +1,8 @@
 port module Main exposing (bot, main)
 
 import Elmegram
-import Elmegram.Runner exposing (Method(..), Response)
+import Elmegram.Bot exposing (Method(..), Response)
+import Elmegram.Runner
 import Json.Encode as Encode
 import Telegram
 
@@ -9,9 +10,8 @@ import Telegram
 main =
     Elmegram.Runner.botRunner
         bot
-        { incomingUpdatePort = incomingUpdatePort
-        , errorPort = errorPort
-        }
+        incomingUpdatePort
+        errorPort
 
 
 
@@ -39,9 +39,9 @@ type alias Model =
     ()
 
 
-init : Telegram.User -> Model
+init : Telegram.User -> Res
 init _ =
-    ()
+    Response [] () Cmd.none
 
 
 type Msg
