@@ -10,15 +10,11 @@ import Telegram
 main =
     Elmegram.Runner.botRunner
         bot
-        incomingUpdatePort
         errorPort
 
 
 
 -- PORTS
-
-
-port incomingUpdatePort : (Encode.Value -> msg) -> Sub msg
 
 
 port errorPort : String -> Cmd msg
