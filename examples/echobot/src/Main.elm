@@ -1,7 +1,7 @@
 port module Main exposing (bot, main)
 
 import Elmegram
-import Elmegram.Runner exposing (Response, methodFromMessage)
+import Elmegram.Runner exposing (Method(..), Response)
 import Json.Encode as Encode
 import Telegram
 
@@ -63,7 +63,7 @@ update msg model =
             case newUpdate.content of
                 Telegram.MessageUpdate message ->
                     Response
-                        [ Elmegram.makeAnswer message.chat ("You said: " ++ message.text) |> methodFromMessage ]
+                        [ Elmegram.makeAnswer message.chat ("You said: " ++ message.text) |> SendMessageMethod ]
                         model
                         Cmd.none
 
