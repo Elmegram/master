@@ -1,6 +1,6 @@
 module TestMain exposing (suite)
 
-import Elmegram
+import Elmegram.Runner as Elmegram
 import Expect
 import Main exposing (bot)
 import Telegram
