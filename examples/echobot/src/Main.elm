@@ -2,20 +2,20 @@ port module Main exposing (bot, main)
 
 import Elmegram
 import Elmegram.Bot exposing (Method(..), Response)
-import Elmegram.Runner
+import Elmegram.Polling
 import Json.Encode as Encode
 import Telegram
 
 
 main =
-    Elmegram.Runner.botRunner bot consolePort
+    Elmegram.Polling.botRunner bot consolePort
 
 
 
 -- PORTS
 
 
-port consolePort : Elmegram.Runner.ConsolePort msg
+port consolePort : Elmegram.Polling.ConsolePort msg
 
 
 
