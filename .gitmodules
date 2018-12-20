@@ -1,6 +1,3 @@
-[submodule "packages/telegram"]
-	path = packages/telegram
-	url = https://github.com/Elmegram/telegram.git
 [submodule "packages/elmegram"]
 	path = packages/elmegram
 	url = https://github.com/Elmegram/elmegram.git

@@ -1,6 +1,6 @@
 module TestMain exposing (suite)
 
-import Elmegram
+import Elmegram.Bot as Elmegram
 import Expect
 import Main exposing (bot)
 import Telegram
@@ -19,7 +19,7 @@ suite =
                 update =
                     TeleTest.makeMessage "echo me" |> TeleTest.send
             in
-            bot.update (bot.newUpdateMsg update) init
+            bot.update (bot.newUpdateMsg update) init.model
                 |> .methods
                 |> List.any
                     (\method ->
