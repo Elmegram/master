@@ -8,16 +8,14 @@ import Telegram
 
 
 main =
-    Elmegram.Runner.botRunner
-        bot
-        errorPort
+    Elmegram.Runner.botRunner bot consolePort
 
 
 
 -- PORTS
 
 
-port errorPort : String -> Cmd msg
+port consolePort : Elmegram.Runner.ConsolePort msg
 
 
 
